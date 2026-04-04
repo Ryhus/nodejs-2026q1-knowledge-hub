@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { User } from './types';
+import type { User, Article } from './types';
 
 @Injectable()
 export class InMemoryDb {
   users: User[] = [];
+  articles: Article[] = [];
 }

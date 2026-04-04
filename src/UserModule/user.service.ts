@@ -48,7 +48,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException();
     }
-    return this.repo.findById(id);
+    return user;
   }
 
   updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
