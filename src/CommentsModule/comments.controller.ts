@@ -4,7 +4,6 @@ import {
   Get,
   Post,
   Delete,
-  Put,
   Param,
   Query,
   ParseUUIDPipe,

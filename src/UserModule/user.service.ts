@@ -21,7 +21,7 @@ export class UserService {
   getAllUsers() {
     const users = this.repo.findAll();
 
-    return users.map(({ password, ...user }) => user);
+    return users.map(({ password: _, ...user }) => user);
   }
 
   createUser(user: CreateUserDto) {
@@ -36,7 +36,8 @@ export class UserService {
     createdUser.updatedAt = currentTimestamp;
 
     this.repo.create(createdUser);
-    const { password, ...safeUser } = createdUser;
+
+    const { password: _, ...safeUser } = createdUser;
 
     return safeUser;
   }
@@ -81,7 +82,7 @@ export class UserService {
     user.password = updatePasswordDto.newPassword;
     user.updatedAt = Date.now();
 
-    const { password, ...safeUser } = user;
+    const { password: _, ...safeUser } = user;
     return safeUser;
   }
 }
