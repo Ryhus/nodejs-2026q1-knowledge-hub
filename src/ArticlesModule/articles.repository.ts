@@ -10,7 +10,7 @@ export class ArticlesRepository {
     this.db.articles.push(article);
   }
 
-  findAll(query: GetArticlesQueryDto) {
+  findAll(query?: GetArticlesQueryDto) {
     let articles = this.db.articles;
 
     if (query.status) {

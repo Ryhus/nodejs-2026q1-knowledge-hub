@@ -18,3 +18,9 @@ export interface Article {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+}

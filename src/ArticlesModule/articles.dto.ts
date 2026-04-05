@@ -42,12 +42,12 @@ export class CreateArticleDto {
 export class GetArticlesQueryDto {
   @IsOptional()
   @IsEnum(ArticleStatus)
-  status: ArticleStatus;
+  status?: ArticleStatus;
 
   @IsOptional()
   @IsUUID()
-  categoryId: string;
+  categoryId?: string;
 
   @IsOptional()
-  tag: string;
+  tag?: string;
 }
