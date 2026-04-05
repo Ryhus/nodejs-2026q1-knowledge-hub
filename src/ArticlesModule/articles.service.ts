@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
+import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class ArticlesService {
-  constructor(private repo: ArticlesRepository) {}
+  constructor(
+    private repo: ArticlesRepository,
+    private inMemoSharedRepo: InMemoSharedRepo,
+  ) {}
 
   getAllArticles(getArticlesQueryDto: GetArticlesQueryDto) {
     return this.repo.findAll(getArticlesQueryDto);
@@ -44,6 +48,12 @@ export class ArticlesService {
     if (!article) {
       throw new NotFoundException();
     }
+
+    const articleComments = this.inMemoSharedRepo.findAllCommentsForArticle(id);
+
+    articleComments.forEach((comment) =>
+      this.inMemoSharedRepo.deleteComment(comment.id),
+    );
 
     this.repo.delete(id);
   }

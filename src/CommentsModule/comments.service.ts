@@ -7,13 +7,13 @@ import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
 import { createCommentDto } from './comments.dto';
 import type { Comment } from 'src/inmemoryDB/types';
-import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
+import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 
 @Injectable()
 export class CommentService {
   constructor(
     private commentRepo: CommentRepository,
-    private articlesRepo: ArticlesRepository,
+    private inMemoSharedRepo: InMemoSharedRepo,
   ) {}
 
   getAllComments(articleId: string) {
@@ -21,7 +21,9 @@ export class CommentService {
   }
 
   createComment(createCommentDto: createCommentDto) {
-    const article = this.articlesRepo.findById(createCommentDto.articleId);
+    const article = this.inMemoSharedRepo.findArticleById(
+      createCommentDto.articleId,
+    );
     if (!article) {
       throw new UnprocessableEntityException();
     }

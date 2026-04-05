@@ -5,11 +5,18 @@ import {
 } from '@nestjs/common';
 import { UsersRepository } from './user.reposiroty';
 import { CreateUserDto, UpdatePasswordDto } from './user.dto';
+import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
+import { CommentRepository } from 'src/CommentsModule/comments.repository';
 import { randomUUID } from 'node:crypto';
 import type { User } from 'src/inmemoryDB/types';
+
 @Injectable()
 export class UserService {
-  constructor(private repo: UsersRepository) {}
+  constructor(
+    private repo: UsersRepository,
+    private articlesRepo: ArticlesRepository,
+    private commentsRepo: CommentRepository,
+  ) {}
 
   getAllUsers() {
     const users = this.repo.findAll();
@@ -39,6 +46,16 @@ export class UserService {
     if (!user) {
       throw new NotFoundException();
     }
+
+    const userArticles = this.articlesRepo.findByAutorId(id);
+    userArticles.forEach((article) => {
+      article.authorId = null;
+    });
+
+    const userComments = this.commentsRepo.findByAutorId(id);
+    userComments.forEach((comment) => {
+      this.commentsRepo.delete(comment.id);
+    });
 
     this.repo.delete(id);
   }

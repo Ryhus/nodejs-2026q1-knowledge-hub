@@ -8,6 +8,6 @@ import { ArticlesRepository } from './articles.repository';
   imports: [InmemoryDatabaseModule],
   controllers: [ArticlesController],
   providers: [ArticlesService, ArticlesRepository],
-  exports: [ArticlesRepository],
+  exports: [ArticlesRepository, ArticlesService],
 })
 export class ArticlesModule {}

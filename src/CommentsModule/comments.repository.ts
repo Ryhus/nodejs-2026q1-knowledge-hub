@@ -25,4 +25,8 @@ export class CommentRepository {
   findById(id: string) {
     return this.db.comments.find((comment) => comment.id === id);
   }
+
+  findByAutorId(authorId: string) {
+    return this.db.comments.filter((comment) => comment.authorId === authorId);
+  }
 }

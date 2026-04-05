@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InMemoryDb } from 'src/inmemoryDB/inmemorydb';
 import type { Article } from 'src/inmemoryDB/types';
 import { GetArticlesQueryDto } from './articles.dto';
+
 @Injectable()
 export class ArticlesRepository {
   constructor(private readonly db: InMemoryDb) {}
@@ -29,10 +30,14 @@ export class ArticlesRepository {
   }
 
   findById(id: string) {
-    return this.db.articles.find((u) => u.id === id);
+    return this.db.articles.find((article) => article.id === id);
+  }
+
+  findByAutorId(authorId: string) {
+    return this.db.articles.filter((article) => article.authorId === authorId);
   }
 
   delete(id: string) {
-    this.db.articles = this.db.articles.filter((u) => u.id !== id);
+    this.db.articles = this.db.articles.filter((article) => article.id !== id);
   }
 }
