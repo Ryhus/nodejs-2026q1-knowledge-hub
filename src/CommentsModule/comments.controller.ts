@@ -10,7 +10,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { CommentService } from './comments.service';
-import { createCommentDto } from './comments.dto';
+import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('comment')
@@ -19,10 +19,8 @@ export class CommentController {
   constructor(private commentService: CommentService) {}
 
   @Get()
-  async getAll(
-    @Query('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
-  ) {
-    return this.commentService.getAllComments(articleId);
+  async getByArticle(@Query() query: GetCommentsByArticleDto) {
+    return this.commentService.getAllComments(query);
   }
 
   @Post()

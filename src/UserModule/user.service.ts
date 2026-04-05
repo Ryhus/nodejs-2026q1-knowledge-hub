@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { UsersRepository } from './user.reposiroty';
-import { CreateUserDto, UpdatePasswordDto } from './user.dto';
+import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { CommentRepository } from 'src/CommentsModule/comments.repository';
 import { randomUUID } from 'node:crypto';
@@ -18,10 +18,40 @@ export class UserService {
     private commentsRepo: CommentRepository,
   ) {}
 
-  getAllUsers() {
-    const users = this.repo.findAll();
+  getAllUsers(getUsersQueryDto: GetUsersQueryDto) {
+    const users = [...this.repo.findAll()];
 
-    return users.map(({ password: _, ...user }) => user);
+    const sortBy = getUsersQueryDto.sortBy ?? 'createdAt';
+    const order = getUsersQueryDto.order ?? 'desc';
+
+    users.sort((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return order === 'asc' ? valA - valB : valB - valA;
+      }
+
+      return order === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    if (!getUsersQueryDto.page && !getUsersQueryDto.limit) {
+      return users;
+    }
+
+    const page = getUsersQueryDto.page ?? 1;
+    const limit = getUsersQueryDto.limit ?? 5;
+
+    const offset = (page - 1) * limit;
+    const data = users.slice(offset, offset + limit);
+    const total = data.length;
+
+    return { data: data, total: total, page: page, limit: limit };
   }
 
   createUser(user: CreateUserDto) {

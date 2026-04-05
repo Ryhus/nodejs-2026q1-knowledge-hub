@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
-import { createCommentDto } from './comments.dto';
+import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 
@@ -16,8 +16,43 @@ export class CommentService {
     private inMemoSharedRepo: InMemoSharedRepo,
   ) {}
 
-  getAllComments(articleId: string) {
-    return this.commentRepo.findAllCommentsForArticle(articleId);
+  getAllComments(getCommentByArticleDto: GetCommentsByArticleDto) {
+    const commentsForArticle = [
+      ...this.commentRepo.findAllCommentsForArticle(
+        getCommentByArticleDto.articleId,
+      ),
+    ];
+
+    const sortBy = getCommentByArticleDto.sortBy ?? 'createdAt';
+    const order = getCommentByArticleDto.order ?? 'desc';
+
+    commentsForArticle.sort((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return order === 'asc' ? valA - valB : valB - valA;
+      }
+
+      return order === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    if (!getCommentByArticleDto.page && !getCommentByArticleDto.limit) {
+      return commentsForArticle;
+    }
+
+    const page = getCommentByArticleDto.page ?? 1;
+    const limit = getCommentByArticleDto.limit ?? 5;
+
+    const offset = (page - 1) * limit;
+    const data = commentsForArticle.slice(offset, offset + limit);
+    const total = data.length;
+    return { data: data, total: total, page: page, limit: limit };
   }
 
   createComment(createCommentDto: createCommentDto) {

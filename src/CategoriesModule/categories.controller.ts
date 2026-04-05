@@ -8,9 +8,10 @@ import {
   Param,
   ParseUUIDPipe,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './categories.dto';
+import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('category')
@@ -19,8 +20,8 @@ export class CategoriesController {
   constructor(private categoriesService: CategoriesService) {}
 
   @Get()
-  async getAll() {
-    return this.categoriesService.getAllCategories();
+  async getAll(@Query() query: GetCategoriesQueryDto) {
+    return this.categoriesService.getAllCategories(query);
   }
 
   @Post()

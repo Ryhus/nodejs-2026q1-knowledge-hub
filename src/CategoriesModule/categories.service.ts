@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoriesRepository } from './categories.repository';
 import { Category } from 'src/inmemoryDB/types';
 import { randomUUID } from 'node:crypto';
-import { CreateCategoryDto } from './categories.dto';
+import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 
 @Injectable()
@@ -12,10 +12,40 @@ export class CategoriesService {
     private articlesRepo: ArticlesRepository,
   ) {}
 
-  getAllCategories() {
-    const categories = this.categoriesRepo.findAll();
+  getAllCategories(getCategoriesQueryDto: GetCategoriesQueryDto) {
+    const categories = [...this.categoriesRepo.findAll()];
 
-    return categories;
+    const sortBy = getCategoriesQueryDto.sortBy ?? 'name';
+    const order = getCategoriesQueryDto.order ?? 'desc';
+
+    categories.sort((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return order === 'asc' ? valA - valB : valB - valA;
+      }
+
+      return order === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    if (!getCategoriesQueryDto.page && !getCategoriesQueryDto.limit) {
+      return categories;
+    }
+
+    const page = getCategoriesQueryDto.page ?? 1;
+    const limit = getCategoriesQueryDto.limit ?? 5;
+
+    const offset = (page - 1) * limit;
+    const data = categories.slice(offset, offset + limit);
+    const total = data.length;
+
+    return { data: data, total: total, page: page, limit: limit };
   }
 
   createCategory(createCategoryDto: CreateCategoryDto) {

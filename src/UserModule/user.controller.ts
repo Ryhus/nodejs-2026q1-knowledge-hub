@@ -8,9 +8,10 @@ import {
   Param,
   ParseUUIDPipe,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdatePasswordDto } from './user.dto';
+import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user')
@@ -19,8 +20,8 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get()
-  async getAll() {
-    return this.userService.getAllUsers();
+  async getAll(@Query() query: GetUsersQueryDto) {
+    return this.userService.getAllUsers(query);
   }
 
   @Post()

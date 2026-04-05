@@ -13,7 +13,39 @@ export class ArticlesService {
   ) {}
 
   getAllArticles(getArticlesQueryDto: GetArticlesQueryDto) {
-    return this.repo.findAll(getArticlesQueryDto);
+    const articles = [...this.repo.findAll(getArticlesQueryDto)];
+
+    const sortBy = getArticlesQueryDto.sortBy ?? 'createdAt';
+    const order = getArticlesQueryDto.order ?? 'desc';
+
+    articles.sort((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return order === 'asc' ? valA - valB : valB - valA;
+      }
+
+      return order === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    if (!getArticlesQueryDto.page && !getArticlesQueryDto.limit) {
+      return articles;
+    }
+
+    const page = getArticlesQueryDto.page ?? 1;
+    const limit = getArticlesQueryDto.limit ?? 5;
+
+    const offset = (page - 1) * limit;
+    const data = articles.slice(offset, offset + limit);
+    const total = data.length;
+
+    return { data: data, total: total, page: page, limit: limit };
   }
 
   createArticle(createArticleDto: CreateArticleDto) {
