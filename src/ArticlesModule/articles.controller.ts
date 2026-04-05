@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('article')
 @Controller('article')
 export class ArticlesController {
   constructor(private articlesService: ArticlesService) {}
