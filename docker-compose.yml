@@ -1,0 +1,62 @@
+name: knowledge-hub
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - 'kh-back:latest'
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 4000:4000
+    env_file:
+      - .env
+    restart: on-failure
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:4000/ || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - backend
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    env_file:
+      - .env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - backend
+
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    ports:
+      - '8080:8080'
+    depends_on:
+      - db
+    profiles:
+      - debug
+    networks:
+      - backend
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    driver: bridge
