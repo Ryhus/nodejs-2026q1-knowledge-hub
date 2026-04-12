@@ -4,6 +4,7 @@ import { Category } from 'src/inmemoryDB/types';
 import { randomUUID } from 'node:crypto';
 import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
+import { PrismaService } from 'src/PrismaModule/prisma.service';
 
 @Injectable()
 export class CategoriesService {
@@ -89,5 +90,91 @@ export class CategoriesService {
     category.description = createCategoryDto.description;
 
     return category;
+  }
+}
+
+@Injectable()
+export class CategoriesPrismaPsService {
+  constructor(private prisma: PrismaService) {}
+
+  async getAllCategories(query: GetCategoriesQueryDto) {
+    const { sortBy = 'name', order = 'desc', page, limit } = query;
+
+    const take = limit ? Number(limit) : undefined;
+    const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
+
+    const categories = await this.prisma.category.findMany({
+      orderBy: {
+        [sortBy]: order,
+      },
+      skip,
+      take,
+    });
+
+    const total = await this.prisma.category.count();
+
+    return {
+      data: categories,
+      total,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    };
+  }
+
+  async createCategory(dto: CreateCategoryDto) {
+    return this.prisma.category.create({
+      data: {
+        id: randomUUID(),
+        name: dto.name,
+        description: dto.description,
+      },
+    });
+  }
+
+  async findCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        articles: true,
+      },
+    });
+
+    if (!category) {
+      throw new NotFoundException();
+    }
+
+    return category;
+  }
+
+  async deleteCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException();
+    }
+
+    return this.prisma.category.delete({
+      where: { id },
+    });
+  }
+
+  async updateCategory(id: string, dto: CreateCategoryDto) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException();
+    }
+
+    return this.prisma.category.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        description: dto.description,
+      },
+    });
   }
 }

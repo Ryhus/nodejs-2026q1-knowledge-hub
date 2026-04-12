@@ -9,14 +9,14 @@ import {
   ParseUUIDPipe,
   HttpCode,
 } from '@nestjs/common';
-import { CommentService } from './comments.service';
+import { CommentPrismaPsService } from './comments.service';
 import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('comment')
 @Controller('comment')
 export class CommentController {
-  constructor(private commentService: CommentService) {}
+  constructor(private commentService: CommentPrismaPsService) {}
 
   @Get()
   async getByArticle(@Query() query: GetCommentsByArticleDto) {

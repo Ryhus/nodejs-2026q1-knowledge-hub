@@ -10,14 +10,14 @@ import {
   HttpCode,
   Query,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
+import { CategoriesPrismaPsService } from './categories.service';
 import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('category')
 @Controller('category')
 export class CategoriesController {
-  constructor(private categoriesService: CategoriesService) {}
+  constructor(private categoriesService: CategoriesPrismaPsService) {}
 
   @Get()
   async getAll(@Query() query: GetCategoriesQueryDto) {

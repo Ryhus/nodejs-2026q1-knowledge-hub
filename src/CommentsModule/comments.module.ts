@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { CommentService } from './comments.service';
+import { CommentPrismaPsService } from './comments.service';
 import { CommentController } from './comments.controller';
-import { InmemoryDatabaseModule } from 'src/inmemoryDB/module.inmemoryDb';
-import { CommentRepository } from './comments.repository';
+import { PrismaModule } from 'src/PrismaModule/prisma.module';
 
 @Module({
-  imports: [InmemoryDatabaseModule],
+  imports: [PrismaModule],
   controllers: [CommentController],
-  providers: [CommentService, CommentRepository],
-  exports: [CommentRepository],
+  providers: [CommentPrismaPsService],
 })
 export class CommentModule {}

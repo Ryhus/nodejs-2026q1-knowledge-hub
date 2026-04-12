@@ -10,14 +10,14 @@ import {
   HttpCode,
   Query,
 } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UserPrismaPsService } from './user.service';
 import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserPrismaPsService) {}
 
   @Get()
   async getAll(@Query() query: GetUsersQueryDto) {
@@ -32,7 +32,7 @@ export class UserController {
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    this.userService.deleteUser(id);
+    return this.userService.deleteUser(id);
   }
 
   @Get(':id')

@@ -2,7 +2,7 @@ export interface User {
   id: string;
   login: string;
   password: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'ADMIN' | 'EDITOR' | 'VIEWER';
   createdAt: number;
   updatedAt: number;
 }
@@ -11,7 +11,7 @@ export interface Article {
   id: string;
   title: string;
   content: string;
-  status: 'draft' | 'published' | 'archived';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   authorId: string | null;
   categoryId: string | null;
   tags: string[];

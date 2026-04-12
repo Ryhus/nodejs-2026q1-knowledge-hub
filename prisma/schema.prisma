@@ -25,10 +25,10 @@ enum Status {
 }
 
 model User { 
-  id        String   @id
+  id        String   @id @default(uuid())
   login     String   @unique
   password  String
-  role      Role
+  role      Role     @default(VIEWER)
   articles  Article[]
   comments  Comment[]
   createdAt DateTime @default(now())
@@ -73,7 +73,7 @@ model Comment {
 }
 
 model Tag {
-  id       String    @id
+  id       String    @id @default(uuid())
   name     String    @unique
   articles Article[]
 }

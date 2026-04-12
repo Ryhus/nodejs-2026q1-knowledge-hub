@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { Status } from 'generated/prisma/enums';
 
 export enum ArticleStatus {
   DRAFT = 'draft',
@@ -42,8 +43,8 @@ export class CreateArticleDto {
 
   @ApiProperty({ enum: ['draft', 'published', 'archived'] })
   @IsOptional()
-  @IsEnum(ArticleStatus)
-  status: ArticleStatus;
+  @IsEnum(Status)
+  status: Status;
 
   @ApiProperty()
   @IsOptional()
@@ -66,8 +67,8 @@ export class CreateArticleDto {
 export class GetArticlesQueryDto {
   @ApiProperty()
   @IsOptional()
-  @IsEnum(ArticleStatus)
-  status?: ArticleStatus;
+  @IsEnum(Status)
+  status?: Status;
 
   @ApiProperty()
   @IsOptional()

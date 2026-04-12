@@ -10,14 +10,14 @@ import {
   ParseUUIDPipe,
   HttpCode,
 } from '@nestjs/common';
-import { ArticlesService } from './articles.service';
+import { ArticlesPrismaPsService } from './articles.service';
 import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('article')
 @Controller('article')
 export class ArticlesController {
-  constructor(private articlesService: ArticlesService) {}
+  constructor(private articlesService: ArticlesPrismaPsService) {}
 
   @Get()
   async getAll(@Query() query: GetArticlesQueryDto) {

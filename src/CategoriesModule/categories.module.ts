@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
+import { CategoriesPrismaPsService } from './categories.service';
 import { CategoriesController } from './categories.controller';
-import { InmemoryDatabaseModule } from 'src/inmemoryDB/module.inmemoryDb';
-import { CategoriesRepository } from './categories.repository';
-import { ArticlesModule } from 'src/ArticlesModule/articles.module';
+import { PrismaModule } from 'src/PrismaModule/prisma.module';
 
 @Module({
-  imports: [InmemoryDatabaseModule, ArticlesModule],
+  imports: [PrismaModule],
   controllers: [CategoriesController],
-  providers: [CategoriesService, CategoriesRepository],
+  providers: [CategoriesPrismaPsService],
 })
 export class CategoriesModule {}

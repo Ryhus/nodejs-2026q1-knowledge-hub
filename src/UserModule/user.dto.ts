@@ -1,6 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { Role } from 'generated/prisma/enums';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -29,10 +30,10 @@ export class CreateUserDto {
   @IsString()
   password: string;
 
-  @ApiProperty({ enum: ['admin', 'editor', 'viewer'] })
+  @ApiProperty({ enum: ['ADMIN', 'EDITOR', 'VIEWER'] })
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  @IsEnum(Role)
+  role?: Role;
 }
 
 export class UpdatePasswordDto {

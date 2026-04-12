@@ -3,11 +3,12 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { UsersRepository } from './user.reposiroty';
+import { UsersPrismaPsRepository, UsersRepository } from './user.reposiroty';
 import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { CommentRepository } from 'src/CommentsModule/comments.repository';
 import { randomUUID } from 'node:crypto';
+import { PrismaService } from 'src/PrismaModule/prisma.service';
 import type { User } from 'src/inmemoryDB/types';
 
 @Injectable()
@@ -61,7 +62,7 @@ export class UserService {
     createdUser.id = randomUUID();
     createdUser.login = user.login;
     createdUser.password = user.password;
-    createdUser.role = user?.role || 'viewer';
+    createdUser.role = user?.role || 'VIEWER';
     createdUser.createdAt = currentTimestamp;
     createdUser.updatedAt = currentTimestamp;
 
@@ -113,6 +114,91 @@ export class UserService {
     user.updatedAt = Date.now();
 
     const { password: _, ...safeUser } = user;
+    return safeUser;
+  }
+}
+
+@Injectable()
+export class UserPrismaPsService {
+  constructor(
+    private repo: UsersPrismaPsRepository,
+    private prisma: PrismaService,
+  ) {}
+
+  async getAllUsers(query: GetUsersQueryDto) {
+    const { sortBy = 'createdAt', order = 'desc', page = 1, limit = 5 } = query;
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: order },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async createUser(user: CreateUserDto) {
+    const createdUser = await this.repo.create({
+      login: user.login,
+      password: user.password,
+      role: user.role ?? 'VIEWER',
+    });
+
+    const { password: _, ...safeUser } = createdUser;
+
+    return safeUser;
+  }
+
+  deleteUser(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.article.updateMany({
+        where: { authorId: id },
+        data: { authorId: null },
+      });
+
+      await tx.comment.deleteMany({
+        where: { authorId: id },
+      });
+
+      return tx.user.delete({
+        where: { id },
+      });
+    });
+  }
+
+  async findUser(id: string) {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return user;
+  }
+
+  async updatePassword(id: string, dto: UpdatePasswordDto) {
+    const user = await this.repo.findById(id);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    if (user.password !== dto.oldPassword) {
+      throw new ForbiddenException('Old password is incorrect');
+    }
+
+    const updatedUser = await this.repo.updatePassword(id, dto.newPassword);
+
+    const { password: _, ...safeUser } = updatedUser;
+
     return safeUser;
   }
 }

@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
+import { PrismaService } from 'src/PrismaModule/prisma.service';
 
 @Injectable()
 export class CommentService {
@@ -92,6 +93,97 @@ export class CommentService {
     if (!comment) {
       throw new NotFoundException();
     }
+    return comment;
+  }
+}
+
+@Injectable()
+export class CommentPrismaPsService {
+  constructor(private prisma: PrismaService) {}
+
+  async getAllComments(dto: GetCommentsByArticleDto) {
+    const {
+      articleId,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page,
+      limit,
+    } = dto;
+
+    const take = limit ? Number(limit) : undefined;
+    const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.comment.findMany({
+        where: { articleId },
+        orderBy: {
+          [sortBy]: order,
+        },
+        skip,
+        take,
+        include: {
+          author: true,
+        },
+      }),
+      this.prisma.comment.count({
+        where: { articleId },
+      }),
+    ]);
+
+    return {
+      data,
+      total,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    };
+  }
+
+  async createComment(dto: createCommentDto) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: dto.articleId },
+    });
+
+    if (!article) {
+      throw new UnprocessableEntityException('Article not found');
+    }
+
+    return this.prisma.comment.create({
+      data: {
+        id: randomUUID(),
+        content: dto.content,
+        articleId: dto.articleId,
+        authorId: dto.authorId ?? null,
+      },
+    });
+  }
+
+  async deleteComment(id: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
+    });
+
+    if (!comment) {
+      throw new NotFoundException();
+    }
+
+    return this.prisma.comment.delete({
+      where: { id },
+    });
+  }
+
+  async findComment(id: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
+      include: {
+        author: true,
+        article: true,
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException();
+    }
+
     return comment;
   }
 }
