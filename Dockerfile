@@ -24,10 +24,12 @@ RUN npm ci --omit=dev
 RUN adduser -D -h /usr/src/app appuser
 
 COPY --from=builder --chown=appuser:appuser /usr/src/app/dist ./dist
+COPY --from=builder --chown=appuser:appuser /usr/src/app/prisma ./prisma
+COPY --from=builder --chown=appuser:appuser /usr/src/app/prisma.config.ts .
 
 USER appuser
 
 EXPOSE 4000
 
-CMD ["node", "dist/src/main.js"]
+CMD sh -c "node dist/src/main.js"
 
