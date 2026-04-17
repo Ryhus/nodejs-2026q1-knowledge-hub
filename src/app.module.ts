@@ -6,6 +6,8 @@ import { CommentModule } from './CommentsModule/comments.module';
 import { AuthtenticationModule } from './AuthtenticationModule/authtentication.module';
 import { APP_FILTER } from '@nestjs/core';
 import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './AuthtenticationModule/auth.guard';
 
 @Module({
   imports: [
@@ -15,6 +17,9 @@ import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
     CommentModule,
     AuthtenticationModule,
   ],
-  providers: [{ provide: APP_FILTER, useClass: PrismaExceptionFilter }],
+  providers: [
+    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_GUARD, useClass: AuthGuard },
+  ],
 })
 export class AppModule {}

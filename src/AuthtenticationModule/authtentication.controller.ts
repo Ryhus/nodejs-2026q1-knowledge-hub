@@ -2,22 +2,26 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { AuthtenticationService } from './authtentication.service';
 import { AuthDto, RefreshTokenDto } from './authtentication.dto';
 import { HttpCode } from '@nestjs/common';
+import { Public } from 'src/shared/decorators/public.decorators';
 
 @Controller('auth')
 export class AuthtenticationController {
   constructor(private authService: AuthtenticationService) {}
 
+  @Public()
   @Post('signup')
   async signup(@Body() authDto: AuthDto) {
     return this.authService.signup(authDto);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(200)
   async login(@Body() authDto: AuthDto) {
     return this.authService.login(authDto);
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Body() refreshDto: RefreshTokenDto) {
