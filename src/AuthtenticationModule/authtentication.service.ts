@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthDto } from './authtentication.dto';
+import { AuthDto, RefreshTokenDto } from './authtentication.dto';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -46,19 +46,28 @@ export class AuthtenticationService {
       throw new ForbiddenException();
     }
 
-    const payload = {
+    const accessToken = await this.jwtService.signAsync({
       userId: logedUser.id,
       login: logedUser.login,
       role: logedUser.role,
-    };
-
-    const tokenTtl = Number(process.env.JWT_ACCESS_TTL) || 900;
-
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET,
-      expiresIn: tokenTtl,
     });
 
-    return logedUser;
+    const refreshToken = await this.jwtService.signAsync(
+      {
+        userId: logedUser.id,
+        login: logedUser.login,
+        type: 'refresh',
+      },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: Number(process.env.JWT_REFRESH_TTL) || 604800,
+      },
+    );
+
+    return { accessToken: accessToken, refreshToken: refreshToken };
+  }
+
+  async refresh(dto: RefreshTokenDto) {
+    const { refreshToken } = dto;
   }
 }
