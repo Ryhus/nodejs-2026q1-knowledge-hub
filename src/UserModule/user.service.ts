@@ -47,7 +47,7 @@ export class UserService {
 
     const page = getUsersQueryDto.page ?? 1;
     const limit = getUsersQueryDto.limit ?? 5;
-
+    
     const offset = (page - 1) * limit;
     const data = users.slice(offset, offset + limit);
     const total = data.length;

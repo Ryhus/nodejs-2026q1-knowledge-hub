@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
@@ -9,6 +10,7 @@ import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
+import { JwtPayload } from 'src/shared/types/auth.types';
 
 @Injectable()
 export class CommentService {
@@ -157,13 +159,17 @@ export class CommentPrismaPsService {
     });
   }
 
-  async deleteComment(id: string) {
+  async deleteComment(id: string, user: JwtPayload) {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
     });
 
     if (!comment) {
       throw new NotFoundException();
+    }
+
+    if (user.role !== 'ADMIN' && user.userId !== comment.authorId) {
+      throw new ForbiddenException();
     }
 
     return this.prisma.comment.delete({

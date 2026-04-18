@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
@@ -6,6 +10,7 @@ import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { Prisma } from 'generated/prisma/client';
+import { JwtPayload } from 'src/shared/types/auth.types';
 
 @Injectable()
 export class ArticlesService {
@@ -168,14 +173,14 @@ export class ArticlesPrismaPsService {
     };
   }
 
-  async createArticle(dto: CreateArticleDto) {
+  async createArticle(dto: CreateArticleDto, userId: string) {
     return this.prisma.article.create({
       data: {
         id: randomUUID(),
         title: dto.title,
         content: dto.content,
         status: dto.status ?? 'DRAFT',
-
+        authorId: userId,
         tags: {
           connectOrCreate: dto.tags.map((tag) => ({
             where: { name: tag },
@@ -222,7 +227,7 @@ export class ArticlesPrismaPsService {
     });
   }
 
-  async updateArticle(id: string, dto: CreateArticleDto) {
+  async updateArticle(id: string, dto: CreateArticleDto, user: JwtPayload) {
     return this.prisma.$transaction(async (tx) => {
       const article = await tx.article.findUnique({
         where: { id },
@@ -230,6 +235,10 @@ export class ArticlesPrismaPsService {
 
       if (!article) {
         throw new NotFoundException();
+      }
+
+      if (user.role !== 'ADMIN' && user.userId !== article.authorId) {
+        throw new ForbiddenException();
       }
 
       const updated = await tx.article.update({

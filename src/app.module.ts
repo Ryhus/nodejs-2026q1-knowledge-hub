@@ -8,6 +8,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './AuthtenticationModule/auth.guard';
+import { RolesGuard } from './AuthtenticationModule/roles.guard';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AuthGuard } from './AuthtenticationModule/auth.guard';
   providers: [
     { provide: APP_FILTER, useClass: PrismaExceptionFilter },
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}
