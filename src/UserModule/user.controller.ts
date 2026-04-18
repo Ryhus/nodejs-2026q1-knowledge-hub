@@ -15,6 +15,8 @@ import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/shared/decorators/roles.decorators';
+import { CurrentUser } from 'src/shared/decorators/currentUser.decorator';
+import { JwtPayload } from 'src/shared/types/auth.types';
 
 @ApiTags('user')
 @Controller('user')
@@ -51,7 +53,8 @@ export class UserController {
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
+    @CurrentUser() user: JwtPayload
   ) {
-    return this.userService.updatePassword(id, updatePasswordDto);
+    return this.userService.updatePassword(id, updatePasswordDto, user);
   }
 }

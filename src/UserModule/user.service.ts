@@ -9,6 +9,8 @@ import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { CommentRepository } from 'src/CommentsModule/comments.repository';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
+import { PasswordService } from 'src/PasswordModule/password.service';
+import { JwtPayload } from 'src/shared/types/auth.types';
 import type { User } from 'src/inmemoryDB/types';
 
 @Injectable()
@@ -47,7 +49,7 @@ export class UserService {
 
     const page = getUsersQueryDto.page ?? 1;
     const limit = getUsersQueryDto.limit ?? 5;
-    
+
     const offset = (page - 1) * limit;
     const data = users.slice(offset, offset + limit);
     const total = data.length;
@@ -123,6 +125,7 @@ export class UserPrismaPsService {
   constructor(
     private repo: UsersPrismaPsRepository,
     private prisma: PrismaService,
+    private passwordService: PasswordService,
   ) {}
 
   async getAllUsers(query: GetUsersQueryDto) {
@@ -148,9 +151,11 @@ export class UserPrismaPsService {
   }
 
   async createUser(user: CreateUserDto) {
+    const hashedPassword = await this.passwordService.hash(user.password);
+
     const createdUser = await this.repo.create({
       login: user.login,
-      password: user.password,
+      password: hashedPassword,
       role: user.role ?? 'VIEWER',
     });
 
@@ -184,18 +189,33 @@ export class UserPrismaPsService {
     return user;
   }
 
-  async updatePassword(id: string, dto: UpdatePasswordDto) {
+  async updatePassword(
+    id: string,
+    dto: UpdatePasswordDto,
+    userPayload: JwtPayload,
+  ) {
+    if (userPayload.userId !== id && userPayload.role !== 'ADMIN') {
+      throw new ForbiddenException();
+    }
+
     const user = await this.repo.findById(id);
 
     if (!user) {
       throw new NotFoundException();
     }
 
-    if (user.password !== dto.oldPassword) {
+    const isCorrectPassword = this.passwordService.compare(
+      user.password,
+      dto.oldPassword,
+    );
+
+    if (!isCorrectPassword) {
       throw new ForbiddenException('Old password is incorrect');
     }
 
-    const updatedUser = await this.repo.updatePassword(id, dto.newPassword);
+    const hashedNewPassword = await this.passwordService.hash(dto.newPassword);
+
+    const updatedUser = await this.repo.updatePassword(id, hashedNewPassword);
 
     const { password: _, ...safeUser } = updatedUser;
 
