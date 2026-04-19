@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { AuthDto, RefreshTokenDto } from './authtentication.dto';
+import { AuthDto } from './authtentication.dto';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException } from '@nestjs/common';
+import { JwtPayload } from 'src/shared/types/auth.types';
 
 @Injectable()
 export class AuthtenticationService {
@@ -48,28 +49,39 @@ export class AuthtenticationService {
       throw new ForbiddenException();
     }
 
-    const accessToken = await this.jwtService.signAsync({
+    const payload = {
       userId: logedUser.id,
       login: logedUser.login,
       role: logedUser.role,
-    });
+    };
 
-    const refreshToken = await this.jwtService.signAsync(
-      {
-        userId: logedUser.id,
-        login: logedUser.login,
-        type: 'refresh',
-      },
-      {
-        secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: Number(process.env.JWT_REFRESH_TTL) || 604800,
-      },
-    );
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: Number(process.env.JWT_REFRESH_TTL) || 604800,
+    });
 
     return { accessToken: accessToken, refreshToken: refreshToken };
   }
 
-  async refresh(dto: RefreshTokenDto) {
-    const { refreshToken } = dto;
+  async refresh(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const { exp, iat, ...cleanPayload } = payload;
+
+      const newAccessToken = await this.jwtService.signAsync(cleanPayload);
+      const newRefreshToken = await this.jwtService.signAsync(cleanPayload, {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: Number(process.env.JWT_REFRESH_TTL) || 604800,
+      });
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    } catch (err) {
+      throw new ForbiddenException('Token is not valid!');
+    }
   }
 }

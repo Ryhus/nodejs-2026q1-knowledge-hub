@@ -46,7 +46,7 @@ describe('Refresh (e2e)', () => {
     expect(validate(userId)).toBeTruthy();
     expect(role).toBeDefined();
     expect(typeof role).toBe('string');
-    expect(['admin', 'editor', 'viewer']).toContain(role);
+    expect(['ADMIN', 'EDITOR', 'VIEWER']).toContain(role);
     expect(exp).toBeDefined();
     expect(typeof exp).toBe('number');
     expect(exp).toBeGreaterThan(0);
@@ -79,6 +79,7 @@ describe('Refresh (e2e)', () => {
       expect(response.body).toBeInstanceOf(Object);
 
       const { accessToken, refreshToken } = response.body as RefreshResponse;
+
       expect(accessToken).toBeDefined();
       expect(typeof accessToken).toBe('string');
 
@@ -108,7 +109,7 @@ describe('Refresh (e2e)', () => {
       const payload: TokenPayload = {
         userId: userTokens.userId,
         login: userTokens.login,
-        role: 'viewer',
+        role: 'VIEWER',
       };
       const refreshToken = generateRefreshToken(payload, { expiresIn: '0s' });
       const response = await request
