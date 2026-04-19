@@ -93,7 +93,7 @@ export class AuthtenticationService {
         throw new ForbiddenException('Token is not valid!');
       }
 
-      const { exp, iat, ...cleanPayload } = payload;
+      const { exp: _exp, iat: _iat, ...cleanPayload } = payload;
 
       const newAccessToken = await this.jwtService.signAsync(cleanPayload);
       const newRefreshToken = await this.jwtService.signAsync(cleanPayload, {
