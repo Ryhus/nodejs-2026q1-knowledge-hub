@@ -31,4 +31,11 @@ export class AuthtenticationController {
     }
     return this.authService.refresh(refreshToken);
   }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(200)
+  async logout(@Body('refreshToken') refreshToken: string) {
+    return this.authService.logout(refreshToken);
+  }
 }

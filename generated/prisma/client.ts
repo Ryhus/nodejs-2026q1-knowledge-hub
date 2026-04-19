@@ -64,3 +64,8 @@ export type Comment = Prisma.CommentModel
  * 
  */
 export type Tag = Prisma.TagModel
+/**
+ * Model RefreshToken
+ * 
+ */
+export type RefreshToken = Prisma.RefreshTokenModel

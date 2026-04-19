@@ -33,7 +33,7 @@ model User {
   comments  Comment[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  
   @@index([login], name: "idx_user_login")
 } 
 
@@ -89,4 +89,13 @@ model Tag {
   articles Article[]
 
   @@index([name], name: "idx_tag_name")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  token     String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
 }
