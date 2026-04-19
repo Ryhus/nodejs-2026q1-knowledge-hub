@@ -9,6 +9,7 @@ import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './AuthtenticationModule/auth.guard';
 import { RolesGuard } from './AuthtenticationModule/roles.guard';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -17,6 +18,14 @@ import { RolesGuard } from './AuthtenticationModule/roles.guard';
     CategoriesModule,
     CommentModule,
     AuthtenticationModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
   ],
   providers: [
     { provide: APP_FILTER, useClass: PrismaExceptionFilter },
