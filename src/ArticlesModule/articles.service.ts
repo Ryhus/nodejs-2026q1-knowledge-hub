@@ -62,7 +62,7 @@ export class ArticlesService {
     createdArticle.id = randomUUID();
     createdArticle.title = createArticleDto.title;
     createdArticle.content = createArticleDto.content;
-    createdArticle.status = createArticleDto.status || 'DRAFT';
+    createdArticle.status = createArticleDto.status || 'draft';
     createdArticle.authorId = createArticleDto.authorId || null;
     createdArticle.categoryId = createArticleDto.categoryId || null;
     createdArticle.tags = createArticleDto.tags || [];
@@ -105,7 +105,7 @@ export class ArticlesService {
 
     article.title = createArticleDto.title;
     article.content = createArticleDto.content;
-    article.status = createArticleDto.status || 'DRAFT';
+    article.status = createArticleDto.status || 'draft';
     article.authorId = createArticleDto.authorId || null;
     article.categoryId = createArticleDto.categoryId || null;
     article.tags = createArticleDto.tags || [];
@@ -179,7 +179,7 @@ export class ArticlesPrismaPsService {
         id: randomUUID(),
         title: dto.title,
         content: dto.content,
-        status: dto.status ?? 'DRAFT',
+        status: dto.status ?? 'draft',
         authorId: userId,
         tags: {
           connectOrCreate: dto.tags.map((tag) => ({
@@ -237,7 +237,7 @@ export class ArticlesPrismaPsService {
         throw new NotFoundException();
       }
 
-      if (user.role !== 'ADMIN' && user.userId !== article.authorId) {
+      if (user.role !== 'admin' && user.userId !== article.authorId) {
         throw new ForbiddenException();
       }
 
@@ -246,7 +246,7 @@ export class ArticlesPrismaPsService {
         data: {
           title: dto.title,
           content: dto.content,
-          status: dto.status ?? 'DRAFT',
+          status: dto.status ?? 'draft',
           authorId: dto.authorId ?? null,
           categoryId: dto.categoryId ?? null,
 

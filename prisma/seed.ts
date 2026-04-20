@@ -15,7 +15,7 @@ export async function runSeed() {
       id: randomUUID(),
       login: 'admin',
       password: 'hashed_password',
-      role: Role.ADMIN,
+      role: Role.admin,
     },
   });
 
@@ -24,7 +24,7 @@ export async function runSeed() {
       id: randomUUID(),
       login: 'editor',
       password: 'hashed_password',
-      role: Role.EDITOR,
+      role: Role.editor,
     },
   });
 
@@ -74,7 +74,7 @@ export async function runSeed() {
         id: randomUUID(),
         title: 'AI Future',
         content: 'AI content',
-        status: Status.PUBLISHED,
+        status: Status.published,
         authorId: admin.id,
         categoryId: tech.id,
         tags: {
@@ -88,7 +88,7 @@ export async function runSeed() {
         id: randomUUID(),
         title: 'Health Tips',
         content: 'Health content',
-        status: Status.DRAFT,
+        status: Status.draft,
         authorId: editor.id,
         categoryId: life.id,
         tags: {
@@ -102,7 +102,7 @@ export async function runSeed() {
         id: randomUUID(),
         title: 'React Guide',
         content: 'React content',
-        status: Status.PUBLISHED,
+        status: Status.published,
         authorId: admin.id,
         categoryId: tech.id,
         tags: {
@@ -116,7 +116,7 @@ export async function runSeed() {
         id: randomUUID(),
         title: 'Sports News',
         content: 'Sports content',
-        status: Status.ARCHIVED,
+        status: Status.archived,
         authorId: editor.id,
         categoryId: sports.id,
         tags: {
@@ -130,7 +130,7 @@ export async function runSeed() {
         id: randomUUID(),
         title: 'Node Basics',
         content: 'Node content',
-        status: Status.PUBLISHED,
+        status: Status.published,
         authorId: admin.id,
         categoryId: tech.id,
         tags: {

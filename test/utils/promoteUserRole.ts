@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
 
-type Role = 'VIEWER' | 'EDITOR' | 'ADMIN';
+type Role = 'viewer' | 'editor' | 'admin';
 
 const promoteUserRole = async (userId: string, role: Role): Promise<void> => {
   await prisma.user.update({

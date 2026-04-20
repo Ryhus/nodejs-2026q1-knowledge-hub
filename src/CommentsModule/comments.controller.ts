@@ -22,25 +22,25 @@ import { JwtPayload } from 'src/shared/types/auth.types';
 export class CommentController {
   constructor(private commentService: CommentPrismaPsService) {}
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get()
   async getByArticle(@Query() query: GetCommentsByArticleDto) {
     return this.commentService.getAllComments(query);
   }
 
-  @Roles(Role.ADMIN, Role.EDITOR)
+  @Roles(Role.admin, Role.editor)
   @Post()
   async create(@Body() createCommentDto: createCommentDto) {
     return this.commentService.createComment(createCommentDto);
   }
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get(':id')
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.commentService.findComment(id);
   }
 
-  @Roles(Role.ADMIN, Role.EDITOR)
+  @Roles(Role.admin, Role.editor)
   @Delete(':id')
   @HttpCode(204)
   async delete(

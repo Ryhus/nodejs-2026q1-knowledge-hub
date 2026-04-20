@@ -20,7 +20,7 @@ const getTokenAndUserId = async (request) => {
   }
 
   // promote directly in DB so base tests run as admin and can mutate
-  await promoteUserRole(mockUserId, 'ADMIN');
+  await promoteUserRole(mockUserId, 'admin');
 
   // get token after promotion so the JWT payload role === 'admin'
   const {

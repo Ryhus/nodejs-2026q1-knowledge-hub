@@ -23,13 +23,13 @@ import { JwtPayload } from 'src/shared/types/auth.types';
 export class ArticlesController {
   constructor(private articlesService: ArticlesPrismaPsService) {}
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get()
   async getAll(@Query() query: GetArticlesQueryDto) {
     return this.articlesService.getAllArticles(query);
   }
 
-  @Roles(Role.ADMIN, Role.EDITOR)
+  @Roles(Role.admin, Role.editor)
   @Post()
   async create(
     @Body() createArticleDto: CreateArticleDto,
@@ -38,20 +38,20 @@ export class ArticlesController {
     return this.articlesService.createArticle(createArticleDto, userId);
   }
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get(':id')
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.articlesService.findArticle(id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.articlesService.deleteArticle(id);
   }
 
-  @Roles(Role.ADMIN, Role.EDITOR)
+  @Roles(Role.admin, Role.editor)
   @Put(':id')
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,

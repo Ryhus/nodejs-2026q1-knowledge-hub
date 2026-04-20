@@ -64,7 +64,7 @@ export class UserService {
     createdUser.id = randomUUID();
     createdUser.login = user.login;
     createdUser.password = user.password;
-    createdUser.role = user?.role || 'VIEWER';
+    createdUser.role = user?.role || 'viewer';
     createdUser.createdAt = currentTimestamp;
     createdUser.updatedAt = currentTimestamp;
 
@@ -156,7 +156,7 @@ export class UserPrismaPsService {
     const createdUser = await this.repo.create({
       login: user.login,
       password: hashedPassword,
-      role: user.role ?? 'VIEWER',
+      role: user.role ?? 'viewer',
     });
 
     const { password: _, ...safeUser } = createdUser;
@@ -194,7 +194,7 @@ export class UserPrismaPsService {
     dto: UpdatePasswordDto,
     userPayload: JwtPayload,
   ) {
-    if (userPayload.userId !== id && userPayload.role !== 'ADMIN') {
+    if (userPayload.userId !== id && userPayload.role !== 'admin') {
       throw new ForbiddenException();
     }
 

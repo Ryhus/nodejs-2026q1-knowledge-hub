@@ -168,7 +168,7 @@ export class CommentPrismaPsService {
       throw new NotFoundException();
     }
 
-    if (user.role !== 'ADMIN' && user.userId !== comment.authorId) {
+    if (user.role !== 'admin' && user.userId !== comment.authorId) {
       throw new ForbiddenException();
     }
 
