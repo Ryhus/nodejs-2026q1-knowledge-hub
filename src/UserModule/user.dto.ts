@@ -30,7 +30,7 @@ export class CreateUserDto {
   @IsString()
   password: string;
 
-  @ApiProperty({ enum: ['ADMIN', 'EDITOR', 'VIEWER'] })
+  @ApiProperty({ enum: ['admin', 'editor', 'viewer'] })
   @IsOptional()
   @IsEnum(Role)
   role?: Role;

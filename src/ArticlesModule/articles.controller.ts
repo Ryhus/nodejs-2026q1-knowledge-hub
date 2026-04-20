@@ -31,17 +31,16 @@ export class ArticlesController {
 
   @Roles(Role.admin, Role.editor)
   @Post()
-  async create(
-    @Body() createArticleDto: CreateArticleDto,
-    @CurrentUser('userId') userId: string,
-  ) {
-    return this.articlesService.createArticle(createArticleDto, userId);
+  async create(@Body() createArticleDto: CreateArticleDto) {
+    return this.articlesService.createArticle(createArticleDto);
   }
 
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Get(':id')
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.articlesService.findArticle(id);
+    const article = await this.articlesService.findArticle(id);
+    console.log(article);
+    return article;
   }
 
   @Roles(Role.admin)

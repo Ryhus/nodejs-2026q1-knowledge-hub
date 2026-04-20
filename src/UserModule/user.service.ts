@@ -129,7 +129,19 @@ export class UserPrismaPsService {
   ) {}
 
   async getAllUsers(query: GetUsersQueryDto) {
+    let isPaginate = false;
+    if (query.page || query.limit) {
+      isPaginate = true;
+    }
+
     const { sortBy = 'createdAt', order = 'desc', page = 1, limit = 5 } = query;
+
+    if (!isPaginate) {
+      const users = await this.prisma.user.findMany({
+        orderBy: { [sortBy]: order },
+      });
+      return users;
+    }
 
     const skip = (page - 1) * limit;
 
@@ -161,23 +173,21 @@ export class UserPrismaPsService {
 
     const { password: _, ...safeUser } = createdUser;
 
-    return safeUser;
+    return {
+      ...safeUser,
+      createdAt: safeUser.createdAt.getTime(),
+      updatedAt: safeUser.updatedAt.getTime(),
+    };
   }
 
-  deleteUser(id: string) {
-    return this.prisma.$transaction(async (tx) => {
-      await tx.article.updateMany({
-        where: { authorId: id },
-        data: { authorId: null },
-      });
+  async deleteUser(id: string) {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      throw new NotFoundException();
+    }
 
-      await tx.comment.deleteMany({
-        where: { authorId: id },
-      });
-
-      return tx.user.delete({
-        where: { id },
-      });
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 
@@ -186,7 +196,11 @@ export class UserPrismaPsService {
     if (!user) {
       throw new NotFoundException();
     }
-    return user;
+    return {
+      ...user,
+      createdAt: user.createdAt.getTime(),
+      updatedAt: user.updatedAt.getTime(),
+    };
   }
 
   async updatePassword(
@@ -204,9 +218,9 @@ export class UserPrismaPsService {
       throw new NotFoundException();
     }
 
-    const isCorrectPassword = this.passwordService.compare(
-      user.password,
+    const isCorrectPassword = await this.passwordService.compare(
       dto.oldPassword,
+      user.password,
     );
 
     if (!isCorrectPassword) {
@@ -219,6 +233,10 @@ export class UserPrismaPsService {
 
     const { password: _, ...safeUser } = updatedUser;
 
-    return safeUser;
+    return {
+      ...safeUser,
+      createdAt: safeUser.createdAt.getTime(),
+      updatedAt: safeUser.updatedAt.getTime(),
+    };
   }
 }

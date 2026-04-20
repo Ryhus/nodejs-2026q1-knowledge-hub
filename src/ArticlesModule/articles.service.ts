@@ -120,14 +120,19 @@ export class ArticlesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllArticles(query: GetArticlesQueryDto) {
+    let isPaginate = false;
+    if (query.page || query.limit) {
+      isPaginate = true;
+    }
+
     const {
       status,
       categoryId,
       tag,
       sortBy = 'createdAt',
       order = 'desc',
-      page,
-      limit,
+      page = 1,
+      limit = 5,
     } = query;
 
     const where: Prisma.ArticleWhereInput = {
@@ -146,6 +151,14 @@ export class ArticlesPrismaPsService {
       [sortBy]: order,
     };
 
+    if (!isPaginate) {
+      const articles = await this.prisma.article.findMany({
+        where,
+        orderBy,
+      });
+      return articles;
+    }
+
     const take = limit ? Number(limit) : undefined;
     const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
 
@@ -155,12 +168,6 @@ export class ArticlesPrismaPsService {
         orderBy,
         skip,
         take,
-        include: {
-          author: true,
-          category: true,
-          tags: true,
-          comments: true,
-        },
       }),
       this.prisma.article.count({ where }),
     ]);
@@ -173,32 +180,42 @@ export class ArticlesPrismaPsService {
     };
   }
 
-  async createArticle(dto: CreateArticleDto, userId: string) {
-    return this.prisma.article.create({
+  async createArticle(dto: CreateArticleDto) {
+    const createdArticle = await this.prisma.article.create({
       data: {
         id: randomUUID(),
         title: dto.title,
         content: dto.content,
         status: dto.status ?? 'draft',
-        authorId: userId,
-        tags: {
-          connectOrCreate: dto.tags.map((tag) => ({
-            where: { name: tag },
-            create: { name: tag },
-          })),
-        },
+        authorId: dto.authorId,
+        categoryId: dto.categoryId,
+        tags: dto.tags?.length
+          ? {
+              connectOrCreate: dto.tags.map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        tags: true,
       },
     });
+
+    return {
+      ...createdArticle,
+      tags: createdArticle.tags.map((tag) => tag.name),
+      createdAt: createdArticle.createdAt.getTime(),
+      updatedAt: createdArticle.updatedAt.getTime(),
+    };
   }
 
   async findArticle(id: string) {
     const article = await this.prisma.article.findUnique({
       where: { id },
       include: {
-        author: true,
-        category: true,
         tags: true,
-        comments: true,
       },
     });
 
@@ -206,63 +223,70 @@ export class ArticlesPrismaPsService {
       throw new NotFoundException();
     }
 
-    return article;
+    return {
+      ...article,
+      tags: article.tags.map((tag) => tag.name),
+      createdAt: article.createdAt.getTime(),
+      updatedAt: article.updatedAt.getTime(),
+    };
   }
 
   async deleteArticle(id: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const article = await tx.article.findUnique({
-        where: { id },
-      });
-
-      if (!article) {
-        throw new NotFoundException();
-      }
-
-      const deleted = await tx.article.delete({
-        where: { id },
-      });
-
-      return deleted;
+    const article = await this.prisma.article.findUnique({
+      where: { id },
     });
+
+    if (!article) {
+      throw new NotFoundException();
+    }
+    const deleted = await this.prisma.article.delete({
+      where: { id },
+    });
+
+    return deleted;
   }
 
   async updateArticle(id: string, dto: CreateArticleDto, user: JwtPayload) {
-    return this.prisma.$transaction(async (tx) => {
-      const article = await tx.article.findUnique({
-        where: { id },
-      });
-
-      if (!article) {
-        throw new NotFoundException();
-      }
-
-      if (user.role !== 'admin' && user.userId !== article.authorId) {
-        throw new ForbiddenException();
-      }
-
-      const updated = await tx.article.update({
-        where: { id },
-        data: {
-          title: dto.title,
-          content: dto.content,
-          status: dto.status ?? 'draft',
-          authorId: dto.authorId ?? null,
-          categoryId: dto.categoryId ?? null,
-
-          tags: dto.tags
-            ? {
-                set: [],
-                connectOrCreate: dto.tags.map((tag) => ({
-                  where: { name: tag },
-                  create: { name: tag },
-                })),
-              }
-            : undefined,
-        },
-      });
-
-      return updated;
+    const article = await this.prisma.article.findUnique({
+      where: { id },
     });
+
+    if (!article) {
+      throw new NotFoundException();
+    }
+
+    if (user.role !== 'admin' && user.userId !== article.authorId) {
+      throw new ForbiddenException();
+    }
+
+    const updatedArticle = await this.prisma.article.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        content: dto.content,
+        status: dto.status ?? 'draft',
+        authorId: dto.authorId ?? null,
+        categoryId: dto.categoryId ?? null,
+
+        tags: dto.tags?.length
+          ? {
+              connectOrCreate: dto.tags.map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    return {
+      ...updatedArticle,
+      tags: updatedArticle.tags.map((tag) => tag.name),
+      createdAt: updatedArticle.createdAt.getTime(),
+      updatedAt: updatedArticle.updatedAt.getTime(),
+    };
   }
 }

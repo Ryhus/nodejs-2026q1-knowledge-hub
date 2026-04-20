@@ -13,7 +13,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
 
     if (exception.code === 'P2002') {
       return response.status(400).json({
-        message: 'Login is already used',
+        message: 'Entity is already exist',
       });
     }
 

@@ -104,13 +104,32 @@ export class CommentPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllComments(dto: GetCommentsByArticleDto) {
+    let isPaginate = false;
+    if (dto.page || dto.limit) {
+      isPaginate = true;
+    }
+
     const {
       articleId,
       sortBy = 'createdAt',
       order = 'desc',
-      page,
-      limit,
+      page = 1,
+      limit = 5,
     } = dto;
+
+    if (!isPaginate) {
+      const commentsByArticle = await this.prisma.comment.findMany({
+        where: { articleId },
+        orderBy: {
+          [sortBy]: order,
+        },
+        include: {
+          author: true,
+        },
+      });
+
+      return commentsByArticle;
+    }
 
     const take = limit ? Number(limit) : undefined;
     const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
@@ -149,7 +168,7 @@ export class CommentPrismaPsService {
       throw new UnprocessableEntityException('Article not found');
     }
 
-    return this.prisma.comment.create({
+    const createdComment = await this.prisma.comment.create({
       data: {
         id: randomUUID(),
         content: dto.content,
@@ -157,6 +176,10 @@ export class CommentPrismaPsService {
         authorId: dto.authorId ?? null,
       },
     });
+    return {
+      ...createdComment,
+      createdAt: createdComment.createdAt.getTime(),
+    };
   }
 
   async deleteComment(id: string, user: JwtPayload) {

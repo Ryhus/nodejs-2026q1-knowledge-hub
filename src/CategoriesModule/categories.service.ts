@@ -98,7 +98,22 @@ export class CategoriesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllCategories(query: GetCategoriesQueryDto) {
-    const { sortBy = 'name', order = 'desc', page, limit } = query;
+    let isPaginate = false;
+    if (query.page || query.limit) {
+      isPaginate = true;
+    }
+
+    const { sortBy = 'name', order = 'desc', page = 1, limit = 5 } = query;
+
+    if (!isPaginate) {
+      const categories = await this.prisma.category.findMany({
+        orderBy: {
+          [sortBy]: order,
+        },
+      });
+
+      return categories;
+    }
 
     const take = limit ? Number(limit) : undefined;
     const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
@@ -122,21 +137,20 @@ export class CategoriesPrismaPsService {
   }
 
   async createCategory(dto: CreateCategoryDto) {
-    return this.prisma.category.create({
+    const createdCategory = await this.prisma.category.create({
       data: {
         id: randomUUID(),
         name: dto.name,
         description: dto.description,
       },
     });
+
+    return createdCategory;
   }
 
   async findCategory(id: string) {
     const category = await this.prisma.category.findUnique({
       where: { id },
-      include: {
-        articles: true,
-      },
     });
 
     if (!category) {
@@ -155,7 +169,7 @@ export class CategoriesPrismaPsService {
       throw new NotFoundException();
     }
 
-    return this.prisma.category.delete({
+    await this.prisma.category.delete({
       where: { id },
     });
   }
@@ -169,12 +183,14 @@ export class CategoriesPrismaPsService {
       throw new NotFoundException();
     }
 
-    return this.prisma.category.update({
+    const updatedCategory = await this.prisma.category.update({
       where: { id },
       data: {
         name: dto.name,
         description: dto.description,
       },
     });
+
+    return updatedCategory;
   }
 }

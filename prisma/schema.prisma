@@ -61,7 +61,7 @@ model Article {
 
 model Category {
   id          String    @id
-  name        String    @unique
+  name        String    
   description String
   articles    Article[]
 
@@ -71,10 +71,10 @@ model Category {
 model Comment {
   id        String   @id
   content   String
-  authorId  String
+  authorId  String?
   articleId String
 
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade) 
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: Cascade) 
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
