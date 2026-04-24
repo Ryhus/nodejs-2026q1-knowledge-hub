@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      src: path.resolve(__dirname, './src'),
+      'generated/prisma': path.resolve(__dirname, './generated/prisma'),
+    },
+  },
   test: {
     include: ['src/**/*.test.ts'],
     coverage: {

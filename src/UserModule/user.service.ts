@@ -136,9 +136,18 @@ export class UserPrismaPsService {
 
     const { sortBy = 'createdAt', order = 'desc', page = 1, limit = 5 } = query;
 
+    const selectedFields = {
+      id: true,
+      login: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+
     if (!isPaginate) {
       const users = await this.prisma.user.findMany({
         orderBy: { [sortBy]: order },
+        select: selectedFields,
       });
       return users;
     }
@@ -150,6 +159,7 @@ export class UserPrismaPsService {
         skip,
         take: limit,
         orderBy: { [sortBy]: order },
+        select: selectedFields,
       }),
       this.prisma.user.count(),
     ]);
@@ -196,8 +206,11 @@ export class UserPrismaPsService {
     if (!user) {
       throw new NotFoundException();
     }
+
+    const { password: _, ...safeUser } = user;
+
     return {
-      ...user,
+      ...safeUser,
       createdAt: user.createdAt.getTime(),
       updatedAt: user.updatedAt.getTime(),
     };
