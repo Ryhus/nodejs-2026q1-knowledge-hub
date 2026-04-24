@@ -30,6 +30,8 @@ describe('UserPrismaPsService (prisma)', () => {
   let service: UserPrismaPsService;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         UserPrismaPsService,

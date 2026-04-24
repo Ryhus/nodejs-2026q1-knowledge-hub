@@ -26,6 +26,8 @@ describe('UserService', () => {
   let service: UserService;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         UserService,
