@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedError } from 'src/shared/exceptions/customErrors';
 import { AuthGuard } from 'src/AuthtenticationModule/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
@@ -59,7 +59,7 @@ describe('AuthGuard', () => {
     };
 
     await expect(guard.canActivate(mockContext as any)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedError,
     );
   });
 
@@ -73,7 +73,7 @@ describe('AuthGuard', () => {
     jwtMock.verifyAsync.mockRejectedValue(new Error('invalid'));
 
     await expect(guard.canActivate(mockContext as any)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedError,
     );
   });
 

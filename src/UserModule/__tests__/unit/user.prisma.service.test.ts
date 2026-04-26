@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UserPrismaPsService } from 'src/UserModule/user.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 import { UsersPrismaPsRepository } from 'src/UserModule/user.reposiroty';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { PasswordService } from 'src/PasswordModule/password.service';
@@ -84,7 +87,7 @@ describe('UserPrismaPsService (prisma)', () => {
     it('should throw if user not found', async () => {
       repoMock.findById.mockResolvedValue(null);
 
-      await expect(service.findUser('1')).rejects.toThrow(NotFoundException);
+      await expect(service.findUser('1')).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -104,7 +107,7 @@ describe('UserPrismaPsService (prisma)', () => {
     it('should throw if user not found', async () => {
       repoMock.findById.mockResolvedValue(null);
 
-      await expect(service.deleteUser('1')).rejects.toThrow(NotFoundException);
+      await expect(service.deleteUser('1')).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -148,7 +151,7 @@ describe('UserPrismaPsService (prisma)', () => {
           userId: '1',
           role: 'user',
         } as any),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should throw if user not found', async () => {
@@ -163,7 +166,7 @@ describe('UserPrismaPsService (prisma)', () => {
           },
           { userId: '1', role: 'user' } as any,
         ),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw ForbiddenException if user is not owner and not admin', async () => {
@@ -173,7 +176,7 @@ describe('UserPrismaPsService (prisma)', () => {
           { oldPassword: 'a', newPassword: 'b' },
           { userId: 'another-user-id', role: 'user' } as any,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 

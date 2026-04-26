@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppLoggerService } from 'src/AppLogerModule/appLogger.service';
+import { AppLoggerService } from 'src/AppLoggerModule/appLogger.service';
 import { PrismaService } from './PrismaModule/prisma.service';
 
 const PORT = process.env.PORT || String(4000);

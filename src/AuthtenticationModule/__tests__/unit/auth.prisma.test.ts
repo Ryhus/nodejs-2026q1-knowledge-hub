@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenError } from 'src/shared/exceptions/customErrors';
 import { AuthtenticationService } from 'src/AuthtenticationModule/authtentication.service';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
@@ -73,7 +73,7 @@ describe('AuthenticationService', () => {
 
       await expect(
         service.login({ login: 'x', password: '123' }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should throw if password incorrect', async () => {
@@ -88,7 +88,7 @@ describe('AuthenticationService', () => {
 
       await expect(
         service.login({ login: 'test', password: 'wrong' }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should return tokens and store refresh token', async () => {
@@ -122,7 +122,7 @@ describe('AuthenticationService', () => {
       jwtMock.verifyAsync.mockRejectedValue(new Error('invalid'));
 
       await expect(service.refresh('bad-token')).rejects.toThrow(
-        ForbiddenException,
+        ForbiddenError,
       );
     });
   });
@@ -136,7 +136,7 @@ describe('AuthenticationService', () => {
       token: 'different-token',
     });
 
-    await expect(service.refresh('token')).rejects.toThrow(ForbiddenException);
+    await expect(service.refresh('token')).rejects.toThrow(ForbiddenError);
   });
 
   it('should rotate tokens', async () => {
@@ -166,7 +166,7 @@ describe('AuthenticationService', () => {
     it('should throw on invalid logout token', async () => {
       jwtMock.verifyAsync.mockRejectedValue(new Error());
 
-      await expect(service.logout('bad')).rejects.toThrow(ForbiddenException);
+      await expect(service.logout('bad')).rejects.toThrow(ForbiddenError);
     });
 
     it('should delete refresh token', async () => {

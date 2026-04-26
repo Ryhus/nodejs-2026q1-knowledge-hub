@@ -10,6 +10,8 @@ import {
   ForbiddenError,
   NotFoundError,
 } from 'src/shared/exceptions/customErrors';
+import { UnprocessableEntityException } from '@nestjs/common';
+
 @Injectable()
 export class CommentService {
   constructor(
@@ -163,7 +165,7 @@ export class CommentPrismaPsService {
     });
 
     if (!article) {
-      throw new NotFoundError('Article not found');
+      throw new UnprocessableEntityException('Article not found');
     }
 
     const createdComment = await this.prisma.comment.create({

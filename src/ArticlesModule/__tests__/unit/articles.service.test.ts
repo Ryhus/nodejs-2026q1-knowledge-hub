@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ArticlesService } from 'src/ArticlesModule/articles.service';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundError } from 'src/shared/exceptions/customErrors';
 
 const repoMock = {
   findAll: vi.fn(),
@@ -58,7 +58,7 @@ describe('ArticlesService', () => {
       it('should throw if not found', () => {
         repoMock.findById.mockReturnValue(null);
 
-        expect(() => service.findArticle('1')).toThrow(NotFoundException);
+        expect(() => service.findArticle('1')).toThrow(NotFoundError);
       });
     });
   });
@@ -82,7 +82,7 @@ describe('ArticlesService', () => {
     it('should throw if article not found', () => {
       repoMock.findById.mockReturnValue(null);
 
-      expect(() => service.deleteArticle('1')).toThrow(NotFoundException);
+      expect(() => service.deleteArticle('1')).toThrow(NotFoundError);
     });
   });
 
@@ -104,7 +104,7 @@ describe('ArticlesService', () => {
       repoMock.findById.mockReturnValue(null);
 
       expect(() => service.updateArticle('1', {} as any)).toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });

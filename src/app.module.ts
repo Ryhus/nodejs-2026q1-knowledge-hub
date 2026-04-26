@@ -10,7 +10,7 @@ import { AuthGuard } from './AuthtenticationModule/auth.guard';
 import { RolesGuard } from './AuthtenticationModule/roles.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggingInerceptor } from './shared/interceptors/logging.interceptor';
-import { AppLoggerModule } from './AppLogerModule/appLoger.module';
+import { AppLoggerModule } from './AppLoggerModule/appLoger.module';
 
 @Module({
   imports: [

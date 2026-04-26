@@ -2,8 +2,10 @@ import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
-import { ForbiddenException } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 
 const prismaMock = {
   article: {
@@ -107,13 +109,13 @@ describe('ArticlesPrismaPsService (Nest)', () => {
     it('should throw if not found', async () => {
       prismaMock.article.findUnique.mockResolvedValue(null);
 
-      await expect(service.findArticle('1')).rejects.toThrow(NotFoundException);
+      await expect(service.findArticle('1')).rejects.toThrow(NotFoundError);
     });
 
     it('should throw if article not found', async () => {
       prismaMock.article.findUnique.mockResolvedValue(null);
 
-      await expect(service.findArticle('1')).rejects.toThrow(NotFoundException);
+      await expect(service.findArticle('1')).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -121,9 +123,7 @@ describe('ArticlesPrismaPsService (Nest)', () => {
     it('should throw when deleting non-existing article', async () => {
       prismaMock.article.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteArticle('1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteArticle('1')).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -139,7 +139,7 @@ describe('ArticlesPrismaPsService (Nest)', () => {
           {} as any,
           { userId: 'other', role: 'user' } as any,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should allow owner', async () => {
@@ -169,7 +169,7 @@ describe('ArticlesPrismaPsService (Nest)', () => {
 
     await expect(
       service.updateArticle('1', {} as any, {} as any),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(NotFoundError);
   });
 
   it('should update with tags', async () => {

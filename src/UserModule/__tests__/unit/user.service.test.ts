@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { UserService } from 'src/UserModule/user.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 import { UsersRepository } from 'src/UserModule/user.reposiroty';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { CommentRepository } from 'src/CommentsModule/comments.repository';
@@ -71,7 +74,7 @@ describe('UserService', () => {
     it('should throw NotFoundException if user not found', () => {
       repoMock.findById.mockReturnValue(null);
 
-      expect(() => service.findUser('1')).toThrow(NotFoundException);
+      expect(() => service.findUser('1')).toThrow(NotFoundError);
     });
   });
 
@@ -94,7 +97,7 @@ describe('UserService', () => {
     it('should throw if user not found', () => {
       repoMock.findById.mockReturnValue(null);
 
-      expect(() => service.deleteUser('1')).toThrow(NotFoundException);
+      expect(() => service.deleteUser('1')).toThrow(NotFoundError);
     });
   });
 
@@ -126,7 +129,7 @@ describe('UserService', () => {
           oldPassword: 'wrong',
           newPassword: 'new',
         }),
-      ).toThrow(ForbiddenException);
+      ).toThrow(ForbiddenError);
     });
   });
 
