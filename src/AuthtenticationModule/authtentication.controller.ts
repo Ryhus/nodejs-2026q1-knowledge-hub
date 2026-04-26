@@ -3,9 +3,9 @@ import { AuthtenticationService } from './authtentication.service';
 import { AuthDto } from './authtentication.dto';
 import { HttpCode } from '@nestjs/common';
 import { Public } from 'src/shared/decorators/public.decorators';
-import { UnauthorizedException } from '@nestjs/common';
 import { UseGuards } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { UnauthorizedError } from 'src/shared/exceptions/customErrors';
 
 @Controller('auth')
 export class AuthtenticationController {
@@ -32,7 +32,7 @@ export class AuthtenticationController {
   @HttpCode(200)
   async refresh(@Body('refreshToken') refreshToken: string) {
     if (!refreshToken) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedError();
     }
     return this.authService.refresh(refreshToken);
   }

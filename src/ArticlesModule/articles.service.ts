@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
@@ -11,6 +7,10 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { Prisma } from 'generated/prisma/client';
 import { JwtPayload } from 'src/shared/types/auth.types';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 
 @Injectable()
 export class ArticlesService {
@@ -77,7 +77,7 @@ export class ArticlesService {
   findArticle(id: string) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return article;
   }
@@ -85,7 +85,7 @@ export class ArticlesService {
   deleteArticle(id: string) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const articleComments = this.inMemoSharedRepo.findAllCommentsForArticle(id);
@@ -100,7 +100,7 @@ export class ArticlesService {
   updateArticle(id: string, createArticleDto: CreateArticleDto) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     article.title = createArticleDto.title;
@@ -220,7 +220,7 @@ export class ArticlesPrismaPsService {
     });
 
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     return {
@@ -237,7 +237,7 @@ export class ArticlesPrismaPsService {
     });
 
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     const deleted = await this.prisma.article.delete({
       where: { id },
@@ -252,11 +252,11 @@ export class ArticlesPrismaPsService {
     });
 
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     if (user.role !== 'admin' && user.userId !== article.authorId) {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     const updatedArticle = await this.prisma.article.update({

@@ -12,6 +12,10 @@ import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { JwtPayload } from 'src/shared/types/auth.types';
 import type { User } from 'src/inmemoryDB/types';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 
 @Injectable()
 export class UserService {
@@ -78,7 +82,7 @@ export class UserService {
   deleteUser(id: string) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const userArticles = this.articlesRepo.findByAutorId(id);
@@ -97,7 +101,7 @@ export class UserService {
   findUser(id: string) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return user;
   }
@@ -105,11 +109,11 @@ export class UserService {
   updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     if (user.password != updatePasswordDto.oldPassword) {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     user.password = updatePasswordDto.newPassword;
@@ -193,7 +197,7 @@ export class UserPrismaPsService {
   async deleteUser(id: string) {
     const user = await this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     await this.prisma.user.delete({
@@ -204,7 +208,7 @@ export class UserPrismaPsService {
   async findUser(id: string) {
     const user = await this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const { password: _, ...safeUser } = user;
@@ -222,13 +226,13 @@ export class UserPrismaPsService {
     userPayload: JwtPayload,
   ) {
     if (userPayload.userId !== id && userPayload.role !== 'admin') {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     const user = await this.repo.findById(id);
 
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const isCorrectPassword = await this.passwordService.compare(
@@ -237,7 +241,7 @@ export class UserPrismaPsService {
     );
 
     if (!isCorrectPassword) {
-      throw new ForbiddenException('Old password is incorrect');
+      throw new ForbiddenError('Old password is incorrect');
     }
 
     const hashedNewPassword = await this.passwordService.hash(dto.newPassword);

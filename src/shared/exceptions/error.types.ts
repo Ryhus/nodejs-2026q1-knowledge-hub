@@ -1,0 +1,14 @@
+export enum ErrorCode {
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  UNAUTHORIZED_ERROR = 'UNAUTHORIZED_ERROR',
+  FORBIDDEN_ERROR = 'FORBIDDEN_ERROR',
+  NOT_FOUND_ERROR = 'NOT_FOUND_ERROR',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CONFLICT_ERROR = 'UNIQUE_CONSTRAINT_FAILED',
+}
+
+export interface ErrorResponse {
+  statusCode: number;
+  error: ErrorCode;
+  message: string;
+}

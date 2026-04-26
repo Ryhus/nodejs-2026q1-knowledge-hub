@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
+import { GlobalExceptionFilter } from './shared/exceptions/filters/global.exception.filter';
 
 const PORT = process.env.PORT || String(4000);
 
@@ -17,7 +17,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new PrismaExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')

@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CategoriesRepository } from './categories.repository';
 import { Category } from 'src/inmemoryDB/types';
 import { randomUUID } from 'node:crypto';
 import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
+import { NotFoundError } from 'src/shared/exceptions/customErrors';
 
 @Injectable()
 export class CategoriesService {
@@ -64,7 +65,7 @@ export class CategoriesService {
   findCategory(id: string) {
     const category = this.categoriesRepo.findById(id);
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return category;
   }
@@ -72,7 +73,7 @@ export class CategoriesService {
   deleteCategory(id: string) {
     const category = this.categoriesRepo.findById(id);
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const articles = this.articlesRepo.findAll({ categoryId: id });
@@ -84,7 +85,7 @@ export class CategoriesService {
   updateCategory(id: string, createCategoryDto: CreateCategoryDto) {
     const category = this.categoriesRepo.findById(id);
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     category.name = createCategoryDto.name;
     category.description = createCategoryDto.description;
@@ -154,7 +155,7 @@ export class CategoriesPrismaPsService {
     });
 
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     return category;
@@ -166,7 +167,7 @@ export class CategoriesPrismaPsService {
     });
 
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     await this.prisma.category.delete({
@@ -180,7 +181,7 @@ export class CategoriesPrismaPsService {
     });
 
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const updatedCategory = await this.prisma.category.update({

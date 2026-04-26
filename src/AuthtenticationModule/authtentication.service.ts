@@ -3,7 +3,7 @@ import { AuthDto } from './authtentication.dto';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenError } from 'src/shared/exceptions/customErrors';
 
 @Injectable()
 export class AuthtenticationService {
@@ -35,7 +35,7 @@ export class AuthtenticationService {
     });
 
     if (!logedUser) {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     const { password: hashedPassword } = logedUser;
@@ -45,7 +45,7 @@ export class AuthtenticationService {
     );
 
     if (!isCorrectPassword) {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     const payload = {
@@ -90,7 +90,7 @@ export class AuthtenticationService {
       });
 
       if (!stored || stored.token !== refreshToken) {
-        throw new ForbiddenException('Token is not valid!');
+        throw new ForbiddenError('Token is not valid!');
       }
 
       const { exp: _exp, iat: _iat, ...cleanPayload } = payload;
@@ -112,7 +112,7 @@ export class AuthtenticationService {
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (err) {
-      throw new ForbiddenException('Token is not valid!');
+      throw new ForbiddenError('Token is not valid!');
     }
   }
 
@@ -128,7 +128,7 @@ export class AuthtenticationService {
 
       return { success: true };
     } catch (err) {
-      throw new ForbiddenException('Token is not valid!');
+      throw new ForbiddenError('Token is not valid!');
     }
   }
 }
