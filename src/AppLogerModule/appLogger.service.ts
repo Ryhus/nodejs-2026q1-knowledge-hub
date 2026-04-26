@@ -1,16 +1,18 @@
-import { Injectable, Logger, LoggerService } from '@nestjs/common';
+import { Injectable, LoggerService } from '@nestjs/common';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-type LogLevel = 'log' | 'error' | 'warn' | 'debug';
+type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose';
 
 const LEVEL_PRIORITY: Record<LogLevel, number> = {
   error: 0,
   warn: 1,
   log: 2,
   debug: 3,
+  verbose: 4,
 };
 
+@Injectable()
 export class AppLoggerService implements LoggerService {
   private readonly logFile = path.join(process.cwd(), 'app.log');
 
@@ -32,6 +34,10 @@ export class AppLoggerService implements LoggerService {
 
   debug?(message: any) {
     this.write('debug', message);
+  }
+
+  verbose?(message: any) {
+    this.write('verbose', message);
   }
 
   private shouldLog(level: LogLevel) {

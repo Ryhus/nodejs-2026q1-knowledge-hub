@@ -28,16 +28,14 @@ export class LoggingInerceptor implements NestInterceptor {
 
     const now = Date.now();
 
-    return next
-      .handle()
-      .pipe(
-        tap(() =>
-          this.logger.log({
-            statusCode: response.statusCode,
-            responseTime: `${Date.now() - now}ms`,
-          }),
-        ),
-      );
+    return next.handle().pipe(
+      tap(() =>
+        this.logger.log({
+          statusCode: response.statusCode,
+          responseTime: `${Date.now() - now}ms`,
+        }),
+      ),
+    );
   }
 
   private sanitize(body: any) {

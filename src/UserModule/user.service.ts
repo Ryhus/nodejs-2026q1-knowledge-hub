@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersPrismaPsRepository, UsersRepository } from './user.reposiroty';
 import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
