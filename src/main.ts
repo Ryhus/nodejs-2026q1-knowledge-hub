@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './shared/exceptions/filters/global.exception.filter';
+import { AppLoggerService } from 'src/AppLogerModule/appLogger.service';
 
 const PORT = process.env.PORT || String(4000);
 
@@ -17,7 +18,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useLogger(app.get(AppLoggerService));
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')

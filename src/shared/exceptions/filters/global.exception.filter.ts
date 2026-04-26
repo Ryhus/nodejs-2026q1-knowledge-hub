@@ -1,18 +1,20 @@
 import {
+  Injectable,
   ExceptionFilter,
   Catch,
   ArgumentsHost,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { BaseError, mapErrorStatusToError } from '../customErrors';
 import { ErrorResponse, ErrorCode } from '../error.types';
 import { PrismaClientKnownRequestError } from 'generated/prisma/internal/prismaNamespace';
+import { AppLoggerService } from 'src/AppLogerModule/appLogger.service';
 
+@Injectable()
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger('HTTP');
+  constructor(private readonly logger: AppLoggerService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -43,10 +45,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
-    this.logger.error(
-      `${responseBody.statusCode} ${responseBody.error} ${responseBody.message} ${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+    this.logger.error({
+      statusCode: responseBody.statusCode,
+      error: responseBody.error,
+      method: request.method,
+      url: request.path,
+      trace: exception instanceof Error ? exception.stack : undefined,
+    });
 
     response.status(responseBody.statusCode).json(responseBody);
   }
