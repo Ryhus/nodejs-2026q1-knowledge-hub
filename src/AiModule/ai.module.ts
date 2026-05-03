@@ -5,6 +5,7 @@ import { AiArticlesController } from './ai-articles.controller';
 import { ArticlesModule } from 'src/ArticlesModule/articles.module';
 import { GeminiProvider } from './providers/gemini/gemini.provider';
 import { AI_PROVIDER } from './interfaces/ai-provider.interface';
+import { AiCacheService } from './ai-cache.service';
 
 @Module({
   imports: [ArticlesModule],
@@ -12,6 +13,7 @@ import { AI_PROVIDER } from './interfaces/ai-provider.interface';
     GeminiProvider,
     { provide: AI_PROVIDER, useClass: GeminiProvider },
     AiService,
+    AiCacheService,
   ],
   controllers: [AiController, AiArticlesController],
   exports: [AiService],

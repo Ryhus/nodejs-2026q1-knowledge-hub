@@ -17,12 +17,14 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { GeminiResponse } from './providers/gemini/providers.type';
+import { AiCacheService } from './ai-cache.service';
 
 @Injectable()
 export class AiService {
   constructor(
     @Inject(AI_PROVIDER) private readonly provider: AiProvider,
     private readonly articleSevice: ArticlesPrismaPsService,
+    private readonly aiCache: AiCacheService,
   ) {}
 
   async generateContent(input: GenerateContentInput) {
@@ -49,17 +51,27 @@ export class AiService {
 
     const article = await this.articleSevice.findArticle(articleId);
 
+    const key = this.aiCache.buildKey(articleId, article.updatedAt, {
+      maxLength,
+    });
+
+    const cached = this.aiCache.get(key);
+    if (cached) return cached;
+
     const prompt = buildSummarizePrompt(article.content, maxLength);
     try {
       const data = await this.provider.callLLM<GeminiResponse>(prompt);
       const summary = data?.candidates[0].content.parts[0].text;
-
-      return {
+      const response = {
         articleId,
         summary,
         originalLength: article.content.length,
         summaryLength: summary.length,
       };
+
+      this.aiCache.set(key, response);
+
+      return response;
     } catch (error) {
       if (error instanceof AiUnavailableError) {
         throw new ServiceUnavailableException();
@@ -74,6 +86,14 @@ export class AiService {
 
     const article = await this.articleSevice.findArticle(articleId);
 
+    const key = this.aiCache.buildKey(articleId, article.updatedAt, {
+      targetLanguage,
+      sourceLanguage,
+    });
+
+    const cached = this.aiCache.get(key);
+    if (cached) return cached;
+
     const prompt = buildTranslatePrompt(
       article.content,
       targetLanguage,
@@ -86,8 +106,11 @@ export class AiService {
       const generationObject = JSON.parse(generaion);
 
       const { translatedText, detectedLanguage } = generationObject;
+      const response = { articleId, translatedText, detectedLanguage };
 
-      return { articleId, translatedText, detectedLanguage };
+      this.aiCache.set(key, response);
+
+      return response;
     } catch (error) {
       if (error instanceof AiUnavailableError) {
         throw new ServiceUnavailableException();
