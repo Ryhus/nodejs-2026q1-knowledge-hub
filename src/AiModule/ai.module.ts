@@ -8,6 +8,7 @@ import { AI_PROVIDER } from './interfaces/ai-provider.interface';
 import { AiCacheService } from './ai-cache.service';
 import { ConversationService } from './converssation/conversation.service';
 import { ConversationStore } from './converssation/conversation.store';
+import { AiObservabilityService } from './ai-observability.service';
 
 @Module({
   imports: [ArticlesModule],
@@ -18,6 +19,7 @@ import { ConversationStore } from './converssation/conversation.store';
     AiCacheService,
     ConversationStore,
     ConversationService,
+    AiObservabilityService,
   ],
   controllers: [AiController, AiArticlesController],
   exports: [AiService],
