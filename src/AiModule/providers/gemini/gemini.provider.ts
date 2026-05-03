@@ -13,20 +13,20 @@ export class GeminiProvider implements AiProvider {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async callLLM(prompt: string) {
+  async callLLM(prompt: string, context?: any[]) {
     const maxRetries = 3;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(context);
         const response = await fetch(this.url, {
           method: 'POST',
           headers: {
             'x-goog-api-key': process.env.GEMINI_API_KEY,
             'Content-Type': 'application/json',
           },
-
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: context ? context : [{ parts: [{ text: prompt }] }],
           }),
         });
 

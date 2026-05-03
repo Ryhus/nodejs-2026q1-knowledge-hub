@@ -1,7 +1,10 @@
-import { IsEnum, IsString, IsOptional } from 'class-validator';
+import { IsEnum, IsString, IsOptional, IsUUID } from 'class-validator';
 import { AnalyzeArticleTask, MaxArticleSummaryLength } from './enums/ai.enums';
 
 export class GenerateContentDto {
+  @IsUUID()
+  sessionId: string;
+
   @IsString()
   prompt: string;
 }

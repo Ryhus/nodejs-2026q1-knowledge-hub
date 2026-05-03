@@ -17,6 +17,7 @@ export interface AnalyzeArticleInput {
 }
 
 export interface GenerateContentInput {
+  sessionId: string;
   prompt: string;
 }
 

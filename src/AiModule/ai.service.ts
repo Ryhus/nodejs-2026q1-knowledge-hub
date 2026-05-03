@@ -19,6 +19,7 @@ import {
 import { GeminiResponse } from './providers/gemini/providers.type';
 import { AiCacheService } from './ai-cache.service';
 import { validateAnalysis, validateTranslation } from './ai-validation';
+import { ConversationService } from './converssation/conversation.service';
 
 @Injectable()
 export class AiService {
@@ -26,15 +27,28 @@ export class AiService {
     @Inject(AI_PROVIDER) private readonly provider: AiProvider,
     private readonly articleSevice: ArticlesPrismaPsService,
     private readonly aiCache: AiCacheService,
+    private readonly conversation: ConversationService,
   ) {}
 
   async generateContent(input: GenerateContentInput) {
-    const { prompt } = input;
+    const { sessionId, prompt } = input;
 
+    const context = this.conversation.getContext(sessionId);
+    this.conversation.addUserMessage(sessionId, prompt);
+    const messages = [...context, { role: 'user', content: prompt }];
+    const contextGemini = messages.map((m) => ({
+      role: m.role,
+      parts: [{ text: m.content }],
+    }));
+    console.log(contextGemini);
     try {
-      const data = await this.provider.callLLM<GeminiResponse>(prompt);
-      const generation = data?.candidates[0].content.parts[0].text;
+      const data = await this.provider.callLLM<GeminiResponse>(
+        prompt,
+        contextGemini,
+      );
 
+      const generation = data?.candidates[0].content.parts[0].text ?? '';
+      this.conversation.addAssistantMessage(sessionId, generation);
       return {
         generation,
       };

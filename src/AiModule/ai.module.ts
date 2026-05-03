@@ -6,6 +6,8 @@ import { ArticlesModule } from 'src/ArticlesModule/articles.module';
 import { GeminiProvider } from './providers/gemini/gemini.provider';
 import { AI_PROVIDER } from './interfaces/ai-provider.interface';
 import { AiCacheService } from './ai-cache.service';
+import { ConversationService } from './converssation/conversation.service';
+import { ConversationStore } from './converssation/conversation.store';
 
 @Module({
   imports: [ArticlesModule],
@@ -14,6 +16,8 @@ import { AiCacheService } from './ai-cache.service';
     { provide: AI_PROVIDER, useClass: GeminiProvider },
     AiService,
     AiCacheService,
+    ConversationStore,
+    ConversationService,
   ],
   controllers: [AiController, AiArticlesController],
   exports: [AiService],
