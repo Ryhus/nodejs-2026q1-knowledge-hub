@@ -83,6 +83,38 @@ Press <kbd>F5</kbd> to debug.
 
 For more information, visit: https://code.visualstudio.com/docs/editor/debugging
 
-### Link to Application imgage
+### Link to Application image
 
 https://hub.docker.com/r/ryhus/knowledge-hub
+
+### AI integration information
+
+#### Gemini API key obtaining:
+
+- Create google account if don't have it yet
+- Go to https://aistudio.google.com/api-keys and create the API key
+- Now you have your key and can call Gemini models with trial limits
+
+#### Gemini Models
+
+By default the `gemini-2.5-flash-lite` model is used.
+
+#### Setup the model after cloning the repo
+
+In the .env file add next variables:
+
+- `GEMINI_API_KEY`=your-gemini-api-key
+- `GEMINI_API_BASE_URL`=https://generativelanguage.googleapis.com
+- `GEMINI_MODEL`=gemini-2.5-flash-lite
+- `AI_RATE_LIMIT_RPM`=20
+- `AI_CACHE_TTL_SEC`=300
+
+You can find all env variables in .env.example
+
+To run the simply type `npm run start:dev` in the terminal
+
+#### Gemini API limitations
+
+1. There are different limits of usage for Gemini models and quotas. But with the free tier you can use `gemini-2.5-flash-lite` with requests per day. You can find detailed info here https://aistudio.google.com/rate-limit.
+2. Latency depends on the model and the task you perform.
+3. Is some countries under the sunctions gemini models are unavailable.
