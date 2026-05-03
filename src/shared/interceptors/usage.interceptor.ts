@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { UsageService } from 'src/UsageModule/usage.service';
+import { tap } from 'rxjs';
 
 @Injectable()
 export class UsageInerceptor implements NestInterceptor {
@@ -21,16 +22,20 @@ export class UsageInerceptor implements NestInterceptor {
     next: CallHandler,
   ): Observable<any> | Promise<Observable<any>> {
     const metaType = this.reflector.get<string>('track', context.getClass());
+    const request = context.switchToHttp().getRequest<Request>();
+    const { path } = request;
 
     if (metaType !== 'ai') {
       return next.handle();
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
-
-    const { path } = request;
-    const trackingRequestData = { domain: metaType, endpoint: path };
-
-    this.tracker.track(trackingRequestData);
+    return next.handle().pipe(
+      tap(() => {
+        this.tracker.track({
+          domain: metaType,
+          endpoint: path,
+        });
+      }),
+    );
   }
 }
