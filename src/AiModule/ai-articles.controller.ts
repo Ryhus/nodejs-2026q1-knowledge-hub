@@ -6,6 +6,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   UseGuards,
+  SetMetadata,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AiService } from './ai.service';
@@ -19,6 +20,7 @@ import { Role } from 'generated/prisma/enums';
 import { throttlers } from './ai-throttler.config';
 
 @Controller('ai/articles')
+@SetMetadata('track', 'ai')
 export class AiArticlesController {
   constructor(private aiService: AiService) {}
 

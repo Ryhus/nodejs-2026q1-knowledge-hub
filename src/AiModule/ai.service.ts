@@ -17,6 +17,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { GeminiResponse } from './providers/gemini/providers.type';
+
 @Injectable()
 export class AiService {
   constructor(

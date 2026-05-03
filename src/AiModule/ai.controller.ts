@@ -1,4 +1,11 @@
-import { Controller, Post, Body, HttpCode, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  UseGuards,
+  SetMetadata,
+} from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/shared/decorators/roles.decorators';
@@ -7,6 +14,7 @@ import { GenerateContentDto } from './ai.dto';
 import { throttlers } from './ai-throttler.config';
 
 @Controller('ai')
+@SetMetadata('track', 'ai')
 export class AiController {
   constructor(private aiService: AiService) {}
 
