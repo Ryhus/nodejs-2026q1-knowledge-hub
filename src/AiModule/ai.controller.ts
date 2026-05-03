@@ -1,8 +1,10 @@
-import { Controller, Post, Body, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/shared/decorators/roles.decorators';
 import { AiService } from './ai.service';
 import { GenerateContentDto } from './ai.dto';
+import { throttlers } from './ai-throttler.config';
 
 @Controller('ai')
 export class AiController {
@@ -10,6 +12,8 @@ export class AiController {
 
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Post('generate')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: throttlers.default })
   @HttpCode(200)
   async generate(@Body() dto: GenerateContentDto) {
     return this.aiService.generateContent(dto);

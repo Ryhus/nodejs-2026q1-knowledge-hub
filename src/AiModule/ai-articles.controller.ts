@@ -5,7 +5,9 @@ import {
   Body,
   ParseUUIDPipe,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AiService } from './ai.service';
 import {
   SummarizeArticleDto,
@@ -14,6 +16,7 @@ import {
 } from './ai.dto';
 import { Roles } from 'src/shared/decorators/roles.decorators';
 import { Role } from 'generated/prisma/enums';
+import { throttlers } from './ai-throttler.config';
 
 @Controller('ai/articles')
 export class AiArticlesController {
@@ -21,6 +24,8 @@ export class AiArticlesController {
 
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Post(':articleId/summarize')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: throttlers.default })
   @HttpCode(200)
   async summarize(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
@@ -31,6 +36,8 @@ export class AiArticlesController {
 
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Post(':articleId/translate')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: throttlers.default })
   @HttpCode(200)
   async translate(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
@@ -41,6 +48,8 @@ export class AiArticlesController {
 
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Post(':articleId/analyze')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: throttlers.default })
   @HttpCode(200)
   async analyze(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
