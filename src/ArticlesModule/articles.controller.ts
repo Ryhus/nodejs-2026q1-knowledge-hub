@@ -39,7 +39,6 @@ export class ArticlesController {
   @Get(':id')
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     const article = await this.articlesService.findArticle(id);
-    console.log(article);
     return article;
   }
 

@@ -11,6 +11,7 @@ import { RolesGuard } from './AuthtenticationModule/roles.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggingInerceptor } from './shared/interceptors/logging.interceptor';
 import { AppLoggerModule } from './AppLoggerModule/appLoger.module';
+import { AiModule } from './AiModule/ai.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AppLoggerModule } from './AppLoggerModule/appLoger.module';
     CommentModule,
     AuthtenticationModule,
     AppLoggerModule,
+    AiModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
