@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import { GeminiResponse } from './providers/gemini/providers.type';
 import { AiCacheService } from './ai-cache.service';
+import { validateAnalysis, validateTranslation } from './ai-validation';
 
 @Injectable()
 export class AiService {
@@ -103,9 +104,10 @@ export class AiService {
     try {
       const data = await this.provider.callLLM<GeminiResponse>(prompt);
       const generaion = data?.candidates[0].content.parts[0].text;
-      const generationObject = JSON.parse(generaion);
 
-      const { translatedText, detectedLanguage } = generationObject;
+      const validatedGeneration = validateTranslation(generaion);
+
+      const { translatedText, detectedLanguage } = validatedGeneration;
       const response = { articleId, translatedText, detectedLanguage };
 
       this.aiCache.set(key, response);
@@ -129,9 +131,10 @@ export class AiService {
     try {
       const data = await this.provider.callLLM<GeminiResponse>(prompt);
       const generaion = data?.candidates[0].content.parts[0].text;
-      const generationObject = JSON.parse(generaion);
 
-      const { analysis, suggestions, severity } = generationObject;
+      const validatedGeneration = validateAnalysis(generaion);
+
+      const { analysis, suggestions, severity } = validatedGeneration;
 
       return { articleId, analysis, suggestions, severity };
     } catch (error) {
