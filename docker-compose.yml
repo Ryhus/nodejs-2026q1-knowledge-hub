@@ -10,6 +10,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      chroma-db:
+        condition: service_healthy
     ports:
       - 4000:4000
     env_file:
@@ -61,6 +63,12 @@ services:
       - .env
     volumes:
       - chroma-db:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:8000/api/v2/healthcheck']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - backend
 
