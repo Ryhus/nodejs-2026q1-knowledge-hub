@@ -1,6 +1,14 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
-import type { ReindexInput, ReindexResult } from './types/rag-service.types';
+import type {
+  ReindexInput,
+  ReindexResult,
+  SemanticSearchInput,
+} from './types/rag-service.types';
 import { Status } from 'generated/prisma/enums';
 import { v5 as uuid5 } from 'uuid';
 import type { ArticleResult } from 'src/ArticlesModule/articles-serivce.types';
@@ -47,7 +55,7 @@ export class RagService {
         payload: {
           chunk_index: chunk.index,
           article_id: article.id,
-          tittle: article.title,
+          title: article.title,
           text: chunk.text,
           status: article.status,
           categoryId: article.categoryId,
@@ -71,7 +79,7 @@ export class RagService {
           result.indexedChunks += chunks.length;
         }
       } catch (error) {
-        throw error;
+        throw new InternalServerErrorException();
       }
     }
 
@@ -109,8 +117,79 @@ export class RagService {
     return chunks;
   }
 
-  search() {
-    return;
+  async search(input: SemanticSearchInput) {
+    const { query, limit = 5, articleStatus, categoryId, tags } = input;
+
+    const modelResult = await this.embedder.embed<any>([query]);
+    const { embeddings } = modelResult;
+
+    const filter = this.buildSearchFilter({ articleStatus, categoryId, tags });
+
+    try {
+      const response = await fetch(
+        `${process.env.RAG_VECTOR_DB_URL}/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: embeddings[0].values,
+            filter: filter,
+            limit,
+            with_payload: true,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const {
+          result: { points },
+        } = responseData;
+
+        const data = points.map((point) => {
+          const {
+            score: similarity,
+            payload: {
+              article_id: articleId,
+              title: articleTitle,
+              text: chunk,
+            },
+          } = point;
+          return { articleId, articleTitle, chunk, similarity };
+        });
+
+        return { results: data };
+      }
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  private buildSearchFilter(params) {
+    const must: any[] = [];
+
+    if (params.tags && params.tags.length > 0) {
+      must.push({
+        key: 'tags',
+        match: { any: params.tags },
+      });
+    }
+
+    if (params.categoryId) {
+      must.push({
+        key: 'categoryId',
+        match: { value: params.categoryId },
+      });
+    }
+
+    if (params.articleStatus) {
+      must.push({
+        key: 'status',
+        match: { value: params.articleStatus },
+      });
+    }
+
+    return must.length > 0 ? { must } : undefined;
   }
 
   chat() {

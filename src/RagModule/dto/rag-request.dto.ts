@@ -6,6 +6,7 @@ import {
   IsArray,
   IsEnum,
   IsUUID,
+  Max,
 } from 'class-validator';
 import { ArticleStatus } from 'src/shared/enums/enums';
 
@@ -26,6 +27,7 @@ export class RagSearchRequestDto {
 
   @IsOptional()
   @IsNumber()
+  @Max(20)
   limit?: number;
 
   @IsOptional()

@@ -8,3 +8,11 @@ export type ReindexResult = {
   indexedChunks: number;
   vectorCollection: string;
 };
+
+export type SemanticSearchInput = {
+  query: string;
+  limit?: number;
+  articleStatus?: 'draft' | 'published' | 'archived';
+  categoryId?: string;
+  tags?: string[];
+};
