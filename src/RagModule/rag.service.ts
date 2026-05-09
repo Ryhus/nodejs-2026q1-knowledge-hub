@@ -2,8 +2,8 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
 import type { ReindexInput, ReindexResult } from './types/rag-service.types';
 import { Status } from 'generated/prisma/enums';
-import { Article } from 'generated/prisma/browser';
 import { v5 as uuid5 } from 'uuid';
+import type { ArticleResult } from 'src/ArticlesModule/articles-serivce.types';
 import {
   EMBEDDING_PROVIDER,
   EmbeddingProvider,
@@ -26,7 +26,7 @@ export class RagService {
     const articles = (await this.articleService.getAllArticles({
       status: articleStatus,
       ids: articleIds,
-    })) as Article[];
+    })) as ArticleResult[];
 
     const result: ReindexResult = {
       indexedArticles: 0,
@@ -36,7 +36,6 @@ export class RagService {
 
     for (const article of articles) {
       const chunks = this.chunkText(article.content);
-
       const texts = chunks.map((c) => c.text);
 
       const embeddingData = await this.embedder.embed<any>(texts);
@@ -48,10 +47,12 @@ export class RagService {
         payload: {
           chunk_index: chunk.index,
           article_id: article.id,
+          tittle: article.title,
           text: chunk.text,
           status: article.status,
-          category: article.categoryId,
-          tag: article.title,
+          categoryId: article.categoryId,
+          tags: article.tags,
+          category: article.category?.name,
         },
       }));
 

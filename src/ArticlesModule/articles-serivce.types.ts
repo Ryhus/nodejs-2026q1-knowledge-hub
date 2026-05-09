@@ -14,3 +14,16 @@ export type ArticlesFiltersInput = {
   limit?: number;
   ids?: string[];
 };
+
+export type ArticleResult = {
+  id: string;
+  title: string;
+  content: string;
+  status: Status;
+  authorId: string | null;
+  categoryId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  category?: { name: string };
+  tags?: string[];
+};
