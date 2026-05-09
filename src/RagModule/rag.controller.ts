@@ -1,4 +1,12 @@
-import { Controller, Post, Body, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  Delete,
+  Param,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { RagService } from './rag.service';
 import { ReindexRequestDto, RagSearchRequestDto } from './dto/rag-request.dto';
 
@@ -16,5 +24,13 @@ export class RagController {
   @HttpCode(200)
   async search(@Body() dto: RagSearchRequestDto) {
     return this.rag.search(dto);
+  }
+
+  @Delete('index/articles/:articleId')
+  @HttpCode(204)
+  async delete(
+    @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
+  ) {
+    return this.rag.deletePointsById(articleId);
   }
 }

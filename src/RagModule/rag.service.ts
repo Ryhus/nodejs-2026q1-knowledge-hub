@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
 import type {
@@ -86,37 +87,6 @@ export class RagService {
     return result;
   }
 
-  private chunkText(text: string) {
-    const chunkSize = Number(process.env.RAG_CHUNK_SIZE ?? 800);
-    const overlap = Number(process.env.RAG_CHUNK_OVERLAP ?? 200);
-
-    const step = chunkSize - overlap;
-
-    const chunks: {
-      text: string;
-      index: number;
-      start: number;
-      end: number;
-    }[] = [];
-
-    let index = 0;
-
-    for (let start = 0; start < text.length; start += step) {
-      const end = Math.min(start + chunkSize, text.length);
-
-      chunks.push({
-        text: text.slice(start, end),
-        index,
-        start,
-        end,
-      });
-
-      index++;
-    }
-
-    return chunks;
-  }
-
   async search(input: SemanticSearchInput) {
     const { query, limit = 5, articleStatus, categoryId, tags } = input;
 
@@ -165,6 +135,112 @@ export class RagService {
     }
   }
 
+  chat() {
+    return;
+  }
+
+  async deletePointsById(id: string) {
+    const exists = await this.queryPointByArticleId(id);
+
+    if (!exists) {
+      throw new NotFoundException();
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:6333/collections/${process.env.RAG_VECTOR_COLLECTION}/points/delete`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filter: {
+              must: [
+                {
+                  key: 'article_id',
+                  match: { value: id },
+                },
+              ],
+            },
+          }),
+        },
+      );
+
+      if (response.ok) {
+        return;
+      }
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  history() {
+    return;
+  }
+
+  private async queryPointByArticleId(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `http://localhost:6333/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filter: {
+              must: [
+                {
+                  key: 'article_id',
+                  match: { value: id },
+                },
+              ],
+            },
+            limit: 1,
+            with_payload: false,
+            with_vector: false,
+          }),
+        },
+      );
+      const data = await response.json();
+      return data.result.points.length > 0;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  private chunkText(text: string) {
+    const chunkSize = Number(process.env.RAG_CHUNK_SIZE ?? 800);
+    const overlap = Number(process.env.RAG_CHUNK_OVERLAP ?? 200);
+
+    const step = chunkSize - overlap;
+
+    const chunks: {
+      text: string;
+      index: number;
+      start: number;
+      end: number;
+    }[] = [];
+
+    let index = 0;
+
+    for (let start = 0; start < text.length; start += step) {
+      const end = Math.min(start + chunkSize, text.length);
+
+      chunks.push({
+        text: text.slice(start, end),
+        index,
+        start,
+        end,
+      });
+
+      index++;
+    }
+
+    return chunks;
+  }
+
   private buildSearchFilter(params) {
     const must: any[] = [];
 
@@ -190,17 +266,5 @@ export class RagService {
     }
 
     return must.length > 0 ? { must } : undefined;
-  }
-
-  chat() {
-    return;
-  }
-
-  delete() {
-    return;
-  }
-
-  history() {
-    return;
   }
 }
