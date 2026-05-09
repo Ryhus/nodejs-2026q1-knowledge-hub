@@ -9,19 +9,23 @@ import type {
   ReindexInput,
   ReindexResult,
   SemanticSearchInput,
+  RagChatInput,
 } from './types/rag-service.types';
 import { Status } from 'generated/prisma/enums';
 import { v5 as uuid5 } from 'uuid';
 import type { ArticleResult } from 'src/ArticlesModule/articles-serivce.types';
 import {
   EMBEDDING_PROVIDER,
+  TEXT_GENERATION_PROVIDER,
   EmbeddingProvider,
+  TextGenerationProvider,
 } from 'src/AiProvidersModule/ai-provider.interfaces';
 
 @Injectable()
 export class RagService {
   constructor(
     @Inject(EMBEDDING_PROVIDER) private embedder: EmbeddingProvider,
+    @Inject(TEXT_GENERATION_PROVIDER) private generator: TextGenerationProvider,
     private articleService: ArticlesPrismaPsService,
   ) {}
 
@@ -112,31 +116,41 @@ export class RagService {
 
       if (response.ok) {
         const responseData = await response.json();
-        const {
-          result: { points },
-        } = responseData;
-
-        const data = points.map((point) => {
-          const {
-            score: similarity,
-            payload: {
-              article_id: articleId,
-              title: articleTitle,
-              text: chunk,
-            },
-          } = point;
-          return { articleId, articleTitle, chunk, similarity };
-        });
-
-        return { results: data };
+        return responseData;
       }
     } catch (error) {
       throw new InternalServerErrorException();
     }
   }
 
-  chat() {
-    return;
+  async chat(input: RagChatInput) {
+    const { question: query, conversationId } = input;
+
+    const dbResult = await this.search({ query });
+
+    const {
+      result: { points },
+    } = dbResult;
+
+    const sources = points.map((point) => {
+      const {
+        payload: {
+          article_id: articleId,
+          title: articleTitle,
+          text: relevantChunk,
+        },
+      } = point;
+      return { articleId, articleTitle, relevantChunk };
+    });
+
+    const promt = this.buildPromt(sources, query);
+
+    const modelResponse = await this.generator.generate<any>(promt);
+
+    const answer =
+      modelResponse?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    return { answer, sources, conversationId };
   }
 
   async deletePointsById(id: string) {
@@ -177,6 +191,21 @@ export class RagService {
 
   history() {
     return;
+  }
+
+  private buildPromt(source: any[], question: string) {
+    const instruction =
+      'You are the chat assistant and speak with the user. You must answer user questions using the context';
+
+    return `
+    ${instruction}
+    
+    Context:
+    ${source.map((data) => data.relevantChunk).join('\n')}
+
+    Question:
+    ${question}
+    `;
   }
 
   private async queryPointByArticleId(id: string): Promise<boolean> {

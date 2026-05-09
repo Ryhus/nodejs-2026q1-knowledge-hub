@@ -16,3 +16,8 @@ export type SemanticSearchInput = {
   categoryId?: string;
   tags?: string[];
 };
+
+export type RagChatInput = {
+  question: string;
+  conversationId?: string;
+};

@@ -8,7 +8,12 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { RagService } from './rag.service';
-import { ReindexRequestDto, RagSearchRequestDto } from './dto/rag-request.dto';
+import {
+  ReindexRequestDto,
+  RagSearchRequestDto,
+  RagChatRequestDto,
+} from './dto/rag-request.dto';
+import { RagSearchResponseDto } from './dto/rag-response.dto';
 
 @Controller('ai/rag')
 export class RagController {
@@ -22,8 +27,24 @@ export class RagController {
 
   @Post('search')
   @HttpCode(200)
-  async search(@Body() dto: RagSearchRequestDto) {
-    return this.rag.search(dto);
+  async search(
+    @Body() dto: RagSearchRequestDto,
+  ): Promise<RagSearchResponseDto> {
+    const responseData = await this.rag.search(dto);
+
+    const {
+      result: { points },
+    } = responseData;
+
+    const data = points.map((point) => {
+      const {
+        score: similarity,
+        payload: { article_id: articleId, title: articleTitle, text: chunk },
+      } = point;
+      return { articleId, articleTitle, chunk, similarity };
+    });
+
+    return { results: data };
   }
 
   @Delete('index/articles/:articleId')
@@ -32,5 +53,11 @@ export class RagController {
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
   ) {
     return this.rag.deletePointsById(articleId);
+  }
+
+  @Post('chat')
+  @HttpCode(200)
+  async chat(@Body() dto: RagChatRequestDto) {
+    return this.rag.chat(dto);
   }
 }
