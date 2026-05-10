@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
+  Get,
 } from '@nestjs/common';
 import { RagService } from './rag.service';
 import {
@@ -59,5 +60,14 @@ export class RagController {
   @HttpCode(200)
   async chat(@Body() dto: RagChatRequestDto) {
     return this.rag.chat(dto);
+  }
+
+  @Get('chat/:conversationId/history')
+  @HttpCode(200)
+  async history(
+    @Param('conversationId', new ParseUUIDPipe({ version: '4' }))
+    conversationId: string,
+  ) {
+    return this.rag.history(conversationId);
   }
 }

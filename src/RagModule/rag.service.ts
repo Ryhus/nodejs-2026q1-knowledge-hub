@@ -210,10 +210,10 @@ export class RagService {
       throw new InternalServerErrorException();
     }
   }
-  instruction =
-    'You are the chat assistant and speak with the user. You must answer user questions using the context';
-  history() {
-    return;
+
+  history(conversationId: string) {
+    const history = this.conversation.getLastMessages(conversationId);
+    return history;
   }
 
   private buildPrompt(source: any[], question: string) {
