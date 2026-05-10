@@ -1,5 +1,9 @@
 export interface TextGenerationProvider {
-  generate<T>(promt: string, context?: any[]): Promise<T>;
+  generate<T>(
+    promt: string,
+    context?: any[],
+    systemInstruction?: string,
+  ): Promise<T>;
 }
 
 export interface EmbeddingProvider {

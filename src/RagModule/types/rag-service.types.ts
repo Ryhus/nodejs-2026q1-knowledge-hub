@@ -21,3 +21,8 @@ export type RagChatInput = {
   question: string;
   conversationId?: string;
 };
+
+export type Message = {
+  role: 'user' | 'model';
+  content: string;
+};

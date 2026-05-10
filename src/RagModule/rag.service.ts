@@ -12,7 +12,7 @@ import type {
   RagChatInput,
 } from './types/rag-service.types';
 import { Status } from 'generated/prisma/enums';
-import { v5 as uuid5 } from 'uuid';
+import { v5 as uuid5, v4 as uuid4 } from 'uuid';
 import type { ArticleResult } from 'src/ArticlesModule/articles-serivce.types';
 import {
   EMBEDDING_PROVIDER,
@@ -20,6 +20,7 @@ import {
   EmbeddingProvider,
   TextGenerationProvider,
 } from 'src/AiProvidersModule/ai-provider.interfaces';
+import { RagConversationStore } from './conversation-store';
 
 @Injectable()
 export class RagService {
@@ -27,6 +28,7 @@ export class RagService {
     @Inject(EMBEDDING_PROVIDER) private embedder: EmbeddingProvider,
     @Inject(TEXT_GENERATION_PROVIDER) private generator: TextGenerationProvider,
     private articleService: ArticlesPrismaPsService,
+    private conversation: RagConversationStore,
   ) {}
 
   private NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -124,7 +126,12 @@ export class RagService {
   }
 
   async chat(input: RagChatInput) {
-    const { question: query, conversationId } = input;
+    const { question: query } = input;
+    let conversationId = input.conversationId;
+
+    if (!conversationId) {
+      conversationId = uuid4();
+    }
 
     const dbResult = await this.search({ query });
 
@@ -143,12 +150,27 @@ export class RagService {
       return { articleId, articleTitle, relevantChunk };
     });
 
-    const promt = this.buildPromt(sources, query);
+    const instruction =
+      'You are the chat assistant and speak with the user. You must answer user questions using the context';
 
-    const modelResponse = await this.generator.generate<any>(promt);
+    const conversation = this.buildConversationContext(
+      sources,
+      query,
+      conversationId,
+    );
 
-    const answer =
-      modelResponse?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const modelResponse = await this.generator.generate<any>(
+      '',
+      conversation,
+      instruction,
+    );
+
+    const answer = modelResponse?.candidates[0].content.parts[0].text ?? '';
+
+    this.conversation.addMessage(conversationId, {
+      role: 'model',
+      content: answer,
+    });
 
     return { answer, sources, conversationId };
   }
@@ -188,24 +210,56 @@ export class RagService {
       throw new InternalServerErrorException();
     }
   }
-
+  instruction =
+    'You are the chat assistant and speak with the user. You must answer user questions using the context';
   history() {
     return;
   }
 
-  private buildPromt(source: any[], question: string) {
-    const instruction =
-      'You are the chat assistant and speak with the user. You must answer user questions using the context';
-
+  private buildPrompt(source: any[], question: string) {
     return `
-    ${instruction}
-    
-    Context:
+    CONTENT:
     ${source.map((data) => data.relevantChunk).join('\n')}
-
-    Question:
+    
+    QUESTION:
     ${question}
     `;
+  }
+
+  private buildConversationContext(
+    source: any[],
+    question: string,
+    conversationId: string,
+  ) {
+    const prompt = this.buildPrompt(source, question);
+
+    const historyLength =
+      Number(process.env.RAG_CONVERSATION_MAX_MESSAGES) || 20;
+
+    const history = this.conversation.getLastMessages(
+      conversationId,
+      historyLength,
+    );
+
+    const contextGemini = history.map((m) => ({
+      role: m.role,
+      parts: [{ text: m.content }],
+    }));
+
+    const content = [
+      ...contextGemini,
+      {
+        role: 'user',
+        parts: [{ text: prompt }],
+      },
+    ];
+
+    this.conversation.addMessage(conversationId, {
+      role: 'user',
+      content: prompt,
+    });
+
+    return content;
   }
 
   private async queryPointByArticleId(id: string): Promise<boolean> {

@@ -23,7 +23,7 @@ export class GeminiProvider
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async generate(prompt: string, context?: any[]) {
+  async generate(prompt: string, context?: any[], systemInstruction?: string) {
     const maxRetries = 3;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -35,6 +35,9 @@ export class GeminiProvider
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            system_instruction: {
+              parts: { text: systemInstruction },
+            },
             contents: context ? context : [{ parts: [{ text: prompt }] }],
           }),
         });
