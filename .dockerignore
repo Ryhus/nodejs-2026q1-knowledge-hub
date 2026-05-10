@@ -6,3 +6,4 @@ logs/
 dist/
 .vscode/
 .idea/
+local_cache

@@ -23,6 +23,7 @@ import {
 } from 'src/AiProvidersModule/ai-provider.interfaces';
 import { RagConversationStore } from './conversation-store';
 import { AiUnavailableError } from 'src/AiProvidersModule/errors/ai.errors';
+import { SparseEmbeddingService } from './sparse-encoder.service';
 
 @Injectable()
 export class RagService {
@@ -31,6 +32,7 @@ export class RagService {
     @Inject(TEXT_GENERATION_PROVIDER) private generator: TextGenerationProvider,
     private articleService: ArticlesPrismaPsService,
     private conversation: RagConversationStore,
+    private sparseEncodder: SparseEmbeddingService,
   ) {}
 
   private NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -59,9 +61,21 @@ export class RagService {
         const embeddingData = await this.embedder.embed<any>(texts);
         const { embeddings } = embeddingData;
 
+        const sparseEmbeddings = [];
+        const embs = this.sparseEncodder.encode(texts);
+        for await (const batch of embs) {
+          sparseEmbeddings.push(...batch);
+        }
+
         const points = chunks.map((chunk, i) => ({
           id: uuid5(`${article.id}:${chunk.index}`, this.NAMESPACE),
-          vector: embeddings[i].values,
+          vector: {
+            dense: embeddings[i].values,
+            sparse: {
+              indices: sparseEmbeddings[i].indices,
+              values: sparseEmbeddings[i].values,
+            },
+          },
           payload: {
             chunk_index: chunk.index,
             article_id: article.id,
@@ -104,6 +118,12 @@ export class RagService {
       const modelResult = await this.embedder.embed<any>([query]);
       const { embeddings } = modelResult;
 
+      const sparseEmbeddings = [];
+      const embs = this.sparseEncodder.encode([query]);
+      for await (const batch of embs) {
+        sparseEmbeddings.push(...batch);
+      }
+
       const filter = this.buildSearchFilter({
         articleStatus,
         categoryId,
@@ -116,8 +136,26 @@ export class RagService {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            query: embeddings[0].values,
-            filter: filter,
+            prefetch: [
+              {
+                query: embeddings[0].values,
+                using: 'dense',
+                filter: filter,
+                limit: limit * 3,
+              },
+              {
+                query: {
+                  indices: sparseEmbeddings[0].indices,
+                  values: sparseEmbeddings[0].values,
+                },
+                using: 'sparse',
+                filter: filter,
+                limit: limit * 3,
+              },
+            ],
+            query: {
+              fusion: 'rrf',
+            },
             limit,
             with_payload: true,
           }),
