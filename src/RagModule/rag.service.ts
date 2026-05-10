@@ -3,6 +3,7 @@ import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
 import type {
@@ -21,6 +22,7 @@ import {
   TextGenerationProvider,
 } from 'src/AiProvidersModule/ai-provider.interfaces';
 import { RagConversationStore } from './conversation-store';
+import { AiUnavailableError } from 'src/AiProvidersModule/errors/ai.errors';
 
 @Injectable()
 export class RagService {
@@ -34,44 +36,44 @@ export class RagService {
   private NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 
   async index(input: ReindexInput) {
-    const { onlyPublished = true, articleIds } = input;
+    try {
+      const { onlyPublished = true, articleIds } = input;
 
-    const articleStatus = onlyPublished ? Status.published : undefined;
+      const articleStatus = onlyPublished ? Status.published : undefined;
 
-    const articles = (await this.articleService.getAllArticles({
-      status: articleStatus,
-      ids: articleIds,
-    })) as ArticleResult[];
+      const articles = (await this.articleService.getAllArticles({
+        status: articleStatus,
+        ids: articleIds,
+      })) as ArticleResult[];
 
-    const result: ReindexResult = {
-      indexedArticles: 0,
-      indexedChunks: 0,
-      vectorCollection: process.env.RAG_VECTOR_COLLECTION,
-    };
+      const result: ReindexResult = {
+        indexedArticles: 0,
+        indexedChunks: 0,
+        vectorCollection: process.env.RAG_VECTOR_COLLECTION,
+      };
 
-    for (const article of articles) {
-      const chunks = this.chunkText(article.content);
-      const texts = chunks.map((c) => c.text);
+      for (const article of articles) {
+        const chunks = this.chunkText(article.content);
+        const texts = chunks.map((c) => c.text);
 
-      const embeddingData = await this.embedder.embed<any>(texts);
-      const { embeddings } = embeddingData;
+        const embeddingData = await this.embedder.embed<any>(texts);
+        const { embeddings } = embeddingData;
 
-      const points = chunks.map((chunk, i) => ({
-        id: uuid5(`${article.id}:${chunk.index}`, this.NAMESPACE),
-        vector: embeddings[i].values,
-        payload: {
-          chunk_index: chunk.index,
-          article_id: article.id,
-          title: article.title,
-          text: chunk.text,
-          status: article.status,
-          categoryId: article.categoryId,
-          tags: article.tags,
-          category: article.category?.name,
-        },
-      }));
+        const points = chunks.map((chunk, i) => ({
+          id: uuid5(`${article.id}:${chunk.index}`, this.NAMESPACE),
+          vector: embeddings[i].values,
+          payload: {
+            chunk_index: chunk.index,
+            article_id: article.id,
+            title: article.title,
+            text: chunk.text,
+            status: article.status,
+            categoryId: article.categoryId,
+            tags: article.tags,
+            category: article.category?.name,
+          },
+        }));
 
-      try {
         const response = await fetch(
           `${process.env.RAG_VECTOR_DB_URL}/collections/${process.env.RAG_VECTOR_COLLECTION}/points`,
           {
@@ -85,23 +87,29 @@ export class RagService {
           result.indexedArticles++;
           result.indexedChunks += chunks.length;
         }
-      } catch (error) {
-        throw new InternalServerErrorException();
       }
+      return result;
+    } catch (error) {
+      if (error instanceof TypeError || error instanceof AiUnavailableError) {
+        throw new ServiceUnavailableException();
+      }
+      throw new InternalServerErrorException();
     }
-
-    return result;
   }
 
   async search(input: SemanticSearchInput) {
     const { query, limit = 5, articleStatus, categoryId, tags } = input;
 
-    const modelResult = await this.embedder.embed<any>([query]);
-    const { embeddings } = modelResult;
-
-    const filter = this.buildSearchFilter({ articleStatus, categoryId, tags });
-
     try {
+      const modelResult = await this.embedder.embed<any>([query]);
+      const { embeddings } = modelResult;
+
+      const filter = this.buildSearchFilter({
+        articleStatus,
+        categoryId,
+        tags,
+      });
+
       const response = await fetch(
         `${process.env.RAG_VECTOR_DB_URL}/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
         {
@@ -121,6 +129,9 @@ export class RagService {
         return responseData;
       }
     } catch (error) {
+      if (error instanceof TypeError || error instanceof AiUnavailableError) {
+        throw new ServiceUnavailableException();
+      }
       throw new InternalServerErrorException();
     }
   }
@@ -135,44 +146,51 @@ export class RagService {
 
     const dbResult = await this.search({ query });
 
-    const {
-      result: { points },
-    } = dbResult;
-
-    const sources = points.map((point) => {
+    try {
       const {
-        payload: {
-          article_id: articleId,
-          title: articleTitle,
-          text: relevantChunk,
-        },
-      } = point;
-      return { articleId, articleTitle, relevantChunk };
-    });
+        result: { points },
+      } = dbResult;
 
-    const instruction =
-      'You are the chat assistant and speak with the user. You must answer user questions using the context';
+      const sources = points.map((point) => {
+        const {
+          payload: {
+            article_id: articleId,
+            title: articleTitle,
+            text: relevantChunk,
+          },
+        } = point;
+        return { articleId, articleTitle, relevantChunk };
+      });
 
-    const conversation = this.buildConversationContext(
-      sources,
-      query,
-      conversationId,
-    );
+      const instruction =
+        'You are the chat assistant and speak with the user. You must answer user questions using the context';
 
-    const modelResponse = await this.generator.generate<any>(
-      '',
-      conversation,
-      instruction,
-    );
+      const conversation = this.buildConversationContext(
+        sources,
+        query,
+        conversationId,
+      );
 
-    const answer = modelResponse?.candidates[0].content.parts[0].text ?? '';
+      const modelResponse = await this.generator.generate<any>(
+        '',
+        conversation,
+        instruction,
+      );
 
-    this.conversation.addMessage(conversationId, {
-      role: 'model',
-      content: answer,
-    });
+      const answer = modelResponse?.candidates[0].content.parts[0].text ?? '';
 
-    return { answer, sources, conversationId };
+      this.conversation.addMessage(conversationId, {
+        role: 'model',
+        content: answer,
+      });
+
+      return { answer, sources, conversationId };
+    } catch (error) {
+      if (error instanceof AiUnavailableError) {
+        throw new ServiceUnavailableException();
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async deletePointsById(id: string) {
@@ -207,6 +225,9 @@ export class RagService {
         return;
       }
     } catch (error) {
+      if (error instanceof TypeError) {
+        throw new ServiceUnavailableException();
+      }
       throw new InternalServerErrorException();
     }
   }
@@ -289,6 +310,9 @@ export class RagService {
       const data = await response.json();
       return data.result.points.length > 0;
     } catch (error) {
+      if (error instanceof TypeError) {
+        throw new ServiceUnavailableException();
+      }
       throw new InternalServerErrorException();
     }
   }
