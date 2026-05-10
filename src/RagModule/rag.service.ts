@@ -55,6 +55,13 @@ export class RagService {
       };
 
       for (const article of articles) {
+        const point = await this.queryPointByArticleId(article.id);
+
+        const pointUpdated =
+          point?.data?.result?.points[0]?.payload?.updated_at;
+
+        if (new Date(article.updatedAt) < new Date(pointUpdated)) continue;
+
         const chunks = this.chunkText(article.content);
         const texts = chunks.map((c) => c.text);
 
@@ -85,6 +92,7 @@ export class RagService {
             categoryId: article.categoryId,
             tags: article.tags,
             category: article.category?.name,
+            updated_at: new Date(),
           },
         }));
 
@@ -232,9 +240,9 @@ export class RagService {
   }
 
   async deletePointsById(id: string) {
-    const exists = await this.queryPointByArticleId(id);
+    const point = await this.queryPointByArticleId(id);
 
-    if (!exists) {
+    if (!point.exists) {
       throw new NotFoundException();
     }
 
@@ -321,7 +329,7 @@ export class RagService {
     return content;
   }
 
-  private async queryPointByArticleId(id: string): Promise<boolean> {
+  private async queryPointByArticleId(id: string): Promise<any> {
     try {
       const response = await fetch(
         `http://localhost:6333/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
@@ -340,13 +348,14 @@ export class RagService {
               ],
             },
             limit: 1,
-            with_payload: false,
+            with_payload: true,
             with_vector: false,
           }),
         },
       );
       const data = await response.json();
-      return data.result.points.length > 0;
+      const exists = data.result.points.length > 0;
+      return { exists, data };
     } catch (error) {
       if (error instanceof TypeError) {
         throw new ServiceUnavailableException();
