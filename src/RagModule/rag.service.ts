@@ -172,7 +172,12 @@ export class RagService {
 
       if (response.ok) {
         const responseData = await response.json();
-        return responseData;
+        const reranked = this.rerankHeuristically(
+          query,
+          responseData.result.points,
+        );
+
+        return { result: { points: reranked } };
       }
     } catch (error) {
       if (error instanceof TypeError || error instanceof AiUnavailableError) {
@@ -420,5 +425,63 @@ export class RagService {
     }
 
     return must.length > 0 ? { must } : undefined;
+  }
+
+  private rerankHeuristically(query: string, chunks) {
+    const normalizedQuery = query.toLowerCase().trim();
+    const queryTokens = this.tokenize(normalizedQuery);
+
+    const reranked = chunks.map((chunk) => {
+      let score = chunk.score;
+      const text = chunk.payload.text?.toLowerCase() ?? '';
+      const title = chunk.payload.title?.toLowerCase() ?? '';
+      const tags = chunk.payload.tags ?? [];
+
+      if (text.includes(normalizedQuery)) {
+        score += 0.35;
+      }
+
+      if (title.includes(normalizedQuery)) {
+        score += 0.3;
+      }
+
+      const textTokens = this.tokenize(text);
+
+      const overlapCount = queryTokens.filter((token) =>
+        textTokens.includes(token),
+      ).length;
+
+      score += overlapCount * 0.05;
+
+      const normalizedTags = tags.map((t) => t.toLowerCase());
+
+      const hasMatchingTag = queryTokens.some((token) =>
+        normalizedTags.includes(token),
+      );
+
+      if (hasMatchingTag) {
+        score += 0.2;
+      }
+
+      if (chunk.payload.chunk_index === 0) {
+        score += 0.1;
+      }
+
+      return {
+        ...chunk,
+
+        rerankScore: score,
+      };
+    });
+
+    return reranked.sort((a, b) => b.rerankScore - a.rerankScore);
+  }
+
+  private tokenize(text: string): string[] {
+    return text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
   }
 }
