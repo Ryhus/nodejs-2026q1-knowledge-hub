@@ -57,12 +57,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
+    const error = exception as HttpException;
+
     this.logger.error({
-      statusCode: responseBody.statusCode,
-      error: responseBody.error,
       method: request.method,
       url: request.path,
-      trace: exception instanceof Error ? exception.stack : undefined,
+      trace: error.cause,
     });
 
     response.status(responseBody.statusCode).json(responseBody);

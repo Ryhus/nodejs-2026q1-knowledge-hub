@@ -35,9 +35,11 @@ export class GeminiProvider
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            system_instruction: {
-              parts: { text: systemInstruction },
-            },
+            system_instruction: systemInstruction
+              ? {
+                  parts: { text: systemInstruction },
+                }
+              : undefined,
             contents: context ? context : [{ parts: [{ text: prompt }] }],
           }),
         });
@@ -47,6 +49,7 @@ export class GeminiProvider
         }
 
         const errorBody = await response.json().catch(() => null);
+
         const message = errorBody?.error?.message ?? 'Unknown error';
         const error = errorBody?.error?.status;
         const status = response.status;
