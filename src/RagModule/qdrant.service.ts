@@ -24,11 +24,13 @@ export class QdrantService implements OnModuleInit {
       },
       body: JSON.stringify({
         vectors: {
-          size: 768,
-          distance: 'Cosine',
+          dense: {
+            size: 768,
+            distance: 'Cosine',
+          },
         },
         sparse_vectors: {
-          text: {},
+          sparse: {},
         },
       }),
     });
