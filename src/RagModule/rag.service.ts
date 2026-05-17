@@ -215,7 +215,7 @@ export class RagService {
 
     try {
       const response = await fetch(
-        `http://localhost:6333/collections/${process.env.RAG_VECTOR_COLLECTION}/points/delete`,
+        `${process.env.RAG_VECTOR_DB_URL}/collections/${process.env.RAG_VECTOR_COLLECTION}/points/delete`,
         {
           method: 'POST',
           headers: {
@@ -299,7 +299,7 @@ export class RagService {
   private async queryPointByArticleId(id: string): Promise<any> {
     try {
       const response = await fetch(
-        `http://localhost:6333/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
+        `${process.env.RAG_VECTOR_DB_URL}/collections/${process.env.RAG_VECTOR_COLLECTION}/points/query`,
         {
           method: 'POST',
           headers: {
