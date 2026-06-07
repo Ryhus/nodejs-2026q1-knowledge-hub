@@ -23,37 +23,37 @@ import { JwtPayload } from 'src/shared/types/auth.types';
 export class UserController {
   constructor(private userService: UserPrismaPsService) {}
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get()
   async getAll(@Query() query: GetUsersQueryDto) {
     return this.userService.getAllUsers(query);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.userService.deleteUser(id);
   }
 
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   @Get(':id')
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.userService.findUser(id);
   }
 
-  @Roles(Role.ADMIN, Role.EDITOR)
+  @Roles(Role.admin, Role.editor)
   @Put(':id')
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
-    @CurrentUser() user: JwtPayload
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.userService.updatePassword(id, updatePasswordDto, user);
   }

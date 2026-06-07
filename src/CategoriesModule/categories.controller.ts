@@ -22,31 +22,31 @@ export class CategoriesController {
   constructor(private categoriesService: CategoriesPrismaPsService) {}
 
   @Get()
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   async getAll(@Query() query: GetCategoriesQueryDto) {
     return this.categoriesService.getAllCategories(query);
   }
 
   @Post()
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   async create(@Body() createCaregoryDto: CreateCategoryDto) {
     return this.categoriesService.createCategory(createCaregoryDto);
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Roles(Role.admin, Role.viewer, Role.editor)
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.categoriesService.findCategory(id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.categoriesService.deleteCategory(id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.admin)
   @Put(':id')
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,

@@ -3,7 +3,7 @@ import promoteUserRole from './promoteUserRole';
 
 const getUserTokenByRole = async (
   request,
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER',
+  role: 'admin' | 'editor' | 'viewer',
   // kept for signature compatibility with existing RBAC specs; unused now
   // because role promotion happens directly via Prisma
   _adminHeaders?: Record<string, string>,
@@ -23,7 +23,7 @@ const getUserTokenByRole = async (
     throw new Error(`Failed to create ${role} user`);
   }
 
-  if (role !== 'VIEWER') {
+  if (role !== 'viewer') {
     await promoteUserRole(userId, role);
   }
 

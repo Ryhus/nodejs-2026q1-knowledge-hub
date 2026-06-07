@@ -4,12 +4,17 @@ import { ArticlesModule } from './ArticlesModule/articles.module';
 import { CategoriesModule } from './CategoriesModule/categories.module';
 import { CommentModule } from './CommentsModule/comments.module';
 import { AuthtenticationModule } from './AuthtenticationModule/authtentication.module';
-import { APP_FILTER } from '@nestjs/core';
-import { PrismaExceptionFilter } from './shared/exceptions/prisma.exception';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { GlobalExceptionFilter } from './shared/exceptions/filters/global.exception.filter';
 import { AuthGuard } from './AuthtenticationModule/auth.guard';
 import { RolesGuard } from './AuthtenticationModule/roles.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { LoggingInerceptor } from './shared/interceptors/logging.interceptor';
+import { AppLoggerModule } from './AppLoggerModule/appLoger.module';
+import { AiModule } from './AiModule/ai.module';
+import { UsageModule } from './UsageModule/usage.module';
+import { UsageInerceptor } from './shared/interceptors/usage.interceptor';
+import { RagModule } from './RagModule/rag.module';
 
 @Module({
   imports: [
@@ -18,6 +23,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
     CategoriesModule,
     CommentModule,
     AuthtenticationModule,
+    AppLoggerModule,
+    AiModule,
+    UsageModule,
+    RagModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -28,9 +37,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
     }),
   ],
   providers: [
-    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInerceptor },
+    { provide: APP_INTERCEPTOR, useClass: UsageInerceptor },
   ],
 })
 export class AppModule {}

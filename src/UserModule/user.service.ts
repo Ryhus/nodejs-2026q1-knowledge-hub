@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersPrismaPsRepository, UsersRepository } from './user.reposiroty';
 import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
@@ -12,6 +8,10 @@ import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { JwtPayload } from 'src/shared/types/auth.types';
 import type { User } from 'src/inmemoryDB/types';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
 
 @Injectable()
 export class UserService {
@@ -64,7 +64,7 @@ export class UserService {
     createdUser.id = randomUUID();
     createdUser.login = user.login;
     createdUser.password = user.password;
-    createdUser.role = user?.role || 'VIEWER';
+    createdUser.role = user?.role || 'viewer';
     createdUser.createdAt = currentTimestamp;
     createdUser.updatedAt = currentTimestamp;
 
@@ -78,7 +78,7 @@ export class UserService {
   deleteUser(id: string) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const userArticles = this.articlesRepo.findByAutorId(id);
@@ -97,7 +97,7 @@ export class UserService {
   findUser(id: string) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return user;
   }
@@ -105,11 +105,11 @@ export class UserService {
   updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
     const user = this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     if (user.password != updatePasswordDto.oldPassword) {
-      throw new ForbiddenException();
+      throw new ForbiddenError();
     }
 
     user.password = updatePasswordDto.newPassword;
@@ -129,7 +129,28 @@ export class UserPrismaPsService {
   ) {}
 
   async getAllUsers(query: GetUsersQueryDto) {
+    let isPaginate = false;
+    if (query.page || query.limit) {
+      isPaginate = true;
+    }
+
     const { sortBy = 'createdAt', order = 'desc', page = 1, limit = 5 } = query;
+
+    const selectedFields = {
+      id: true,
+      login: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+
+    if (!isPaginate) {
+      const users = await this.prisma.user.findMany({
+        orderBy: { [sortBy]: order },
+        select: selectedFields,
+      });
+      return users;
+    }
 
     const skip = (page - 1) * limit;
 
@@ -138,6 +159,7 @@ export class UserPrismaPsService {
         skip,
         take: limit,
         orderBy: { [sortBy]: order },
+        select: selectedFields,
       }),
       this.prisma.user.count(),
     ]);
@@ -156,37 +178,42 @@ export class UserPrismaPsService {
     const createdUser = await this.repo.create({
       login: user.login,
       password: hashedPassword,
-      role: user.role ?? 'VIEWER',
+      role: user.role ?? 'viewer',
     });
 
     const { password: _, ...safeUser } = createdUser;
 
-    return safeUser;
+    return {
+      ...safeUser,
+      createdAt: safeUser.createdAt.getTime(),
+      updatedAt: safeUser.updatedAt.getTime(),
+    };
   }
 
-  deleteUser(id: string) {
-    return this.prisma.$transaction(async (tx) => {
-      await tx.article.updateMany({
-        where: { authorId: id },
-        data: { authorId: null },
-      });
+  async deleteUser(id: string) {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      throw new NotFoundError();
+    }
 
-      await tx.comment.deleteMany({
-        where: { authorId: id },
-      });
-
-      return tx.user.delete({
-        where: { id },
-      });
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 
   async findUser(id: string) {
     const user = await this.repo.findById(id);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
-    return user;
+
+    const { password: _, ...safeUser } = user;
+
+    return {
+      ...safeUser,
+      createdAt: user.createdAt.getTime(),
+      updatedAt: user.updatedAt.getTime(),
+    };
   }
 
   async updatePassword(
@@ -194,23 +221,23 @@ export class UserPrismaPsService {
     dto: UpdatePasswordDto,
     userPayload: JwtPayload,
   ) {
-    if (userPayload.userId !== id && userPayload.role !== 'ADMIN') {
-      throw new ForbiddenException();
+    if (userPayload.userId !== id && userPayload.role !== 'admin') {
+      throw new ForbiddenError();
     }
 
     const user = await this.repo.findById(id);
 
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
-    const isCorrectPassword = this.passwordService.compare(
-      user.password,
+    const isCorrectPassword = await this.passwordService.compare(
       dto.oldPassword,
+      user.password,
     );
 
     if (!isCorrectPassword) {
-      throw new ForbiddenException('Old password is incorrect');
+      throw new ForbiddenError('Old password is incorrect');
     }
 
     const hashedNewPassword = await this.passwordService.hash(dto.newPassword);
@@ -219,6 +246,10 @@ export class UserPrismaPsService {
 
     const { password: _, ...safeUser } = updatedUser;
 
-    return safeUser;
+    return {
+      ...safeUser,
+      createdAt: safeUser.createdAt.getTime(),
+      updatedAt: safeUser.updatedAt.getTime(),
+    };
   }
 }
