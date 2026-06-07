@@ -13,27 +13,27 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
+  admin
+  editor
+  viewer
 }
 
 enum Status {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+  draft
+  published
+  archived
 }
 
 model User { 
   id        String   @id @default(uuid())
   login     String   @unique
   password  String
-  role      Role     @default(VIEWER)
+  role      Role     @default(viewer)
   articles  Article[]
   comments  Comment[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  
   @@index([login], name: "idx_user_login")
 } 
 
@@ -61,7 +61,7 @@ model Article {
 
 model Category {
   id          String    @id
-  name        String    @unique
+  name        String    
   description String
   articles    Article[]
 
@@ -71,10 +71,10 @@ model Category {
 model Comment {
   id        String   @id
   content   String
-  authorId  String
+  authorId  String?
   articleId String
 
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade) 
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: Cascade) 
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -89,4 +89,13 @@ model Tag {
   articles Article[]
 
   @@index([name], name: "idx_tag_name")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  token     String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
 }

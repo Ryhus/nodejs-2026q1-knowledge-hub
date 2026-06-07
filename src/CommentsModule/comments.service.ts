@@ -1,14 +1,16 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
 import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
+import { JwtPayload } from 'src/shared/types/auth.types';
+import {
+  ForbiddenError,
+  NotFoundError,
+} from 'src/shared/exceptions/customErrors';
+import { UnprocessableEntityException } from '@nestjs/common';
 
 @Injectable()
 export class CommentService {
@@ -61,7 +63,7 @@ export class CommentService {
       createCommentDto.articleId,
     );
     if (!article) {
-      throw new UnprocessableEntityException();
+      throw new NotFoundError();
     }
 
     const createdComment = {} as Comment;
@@ -82,7 +84,7 @@ export class CommentService {
   deleteComment(id: string) {
     const comment = this.commentRepo.findById(id);
     if (!comment) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     this.commentRepo.delete(id);
@@ -91,7 +93,7 @@ export class CommentService {
   findComment(id: string) {
     const comment = this.commentRepo.findById(id);
     if (!comment) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return comment;
   }
@@ -102,13 +104,32 @@ export class CommentPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllComments(dto: GetCommentsByArticleDto) {
+    let isPaginate = false;
+    if (dto.page || dto.limit) {
+      isPaginate = true;
+    }
+
     const {
       articleId,
       sortBy = 'createdAt',
       order = 'desc',
-      page,
-      limit,
+      page = 1,
+      limit = 5,
     } = dto;
+
+    if (!isPaginate) {
+      const commentsByArticle = await this.prisma.comment.findMany({
+        where: { articleId },
+        orderBy: {
+          [sortBy]: order,
+        },
+        include: {
+          author: true,
+        },
+      });
+
+      return commentsByArticle;
+    }
 
     const take = limit ? Number(limit) : undefined;
     const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
@@ -147,7 +168,7 @@ export class CommentPrismaPsService {
       throw new UnprocessableEntityException('Article not found');
     }
 
-    return this.prisma.comment.create({
+    const createdComment = await this.prisma.comment.create({
       data: {
         id: randomUUID(),
         content: dto.content,
@@ -155,15 +176,23 @@ export class CommentPrismaPsService {
         authorId: dto.authorId ?? null,
       },
     });
+    return {
+      ...createdComment,
+      createdAt: createdComment.createdAt.getTime(),
+    };
   }
 
-  async deleteComment(id: string) {
+  async deleteComment(id: string, user: JwtPayload) {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
     });
 
     if (!comment) {
-      throw new NotFoundException();
+      throw new NotFoundError();
+    }
+
+    if (user.role !== 'admin' && user.userId !== comment.authorId) {
+      throw new ForbiddenError();
     }
 
     return this.prisma.comment.delete({
@@ -181,7 +210,7 @@ export class CommentPrismaPsService {
     });
 
     if (!comment) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     return comment;

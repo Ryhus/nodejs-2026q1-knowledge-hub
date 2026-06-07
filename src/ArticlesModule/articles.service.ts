@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
@@ -6,6 +6,12 @@ import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { Prisma } from 'generated/prisma/client';
+import { JwtPayload } from 'src/shared/types/auth.types';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from 'src/shared/exceptions/customErrors';
+import { ArticlesFiltersInput } from './articles-serivce.types';
 
 @Injectable()
 export class ArticlesService {
@@ -57,7 +63,7 @@ export class ArticlesService {
     createdArticle.id = randomUUID();
     createdArticle.title = createArticleDto.title;
     createdArticle.content = createArticleDto.content;
-    createdArticle.status = createArticleDto.status || 'DRAFT';
+    createdArticle.status = createArticleDto.status || 'draft';
     createdArticle.authorId = createArticleDto.authorId || null;
     createdArticle.categoryId = createArticleDto.categoryId || null;
     createdArticle.tags = createArticleDto.tags || [];
@@ -72,7 +78,7 @@ export class ArticlesService {
   findArticle(id: string) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
     return article;
   }
@@ -80,7 +86,7 @@ export class ArticlesService {
   deleteArticle(id: string) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     const articleComments = this.inMemoSharedRepo.findAllCommentsForArticle(id);
@@ -95,12 +101,12 @@ export class ArticlesService {
   updateArticle(id: string, createArticleDto: CreateArticleDto) {
     const article = this.repo.findById(id);
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
     article.title = createArticleDto.title;
     article.content = createArticleDto.content;
-    article.status = createArticleDto.status || 'DRAFT';
+    article.status = createArticleDto.status || 'draft';
     article.authorId = createArticleDto.authorId || null;
     article.categoryId = createArticleDto.categoryId || null;
     article.tags = createArticleDto.tags || [];
@@ -114,18 +120,29 @@ export class ArticlesService {
 export class ArticlesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllArticles(query: GetArticlesQueryDto) {
+  async getAllArticles(params: ArticlesFiltersInput) {
+    let isPaginate = false;
+    if (params.page || params.limit) {
+      isPaginate = true;
+    }
+
     const {
+      ids,
       status,
       categoryId,
       tag,
       sortBy = 'createdAt',
       order = 'desc',
-      page,
-      limit,
-    } = query;
+      page = 1,
+      limit = 5,
+    } = params;
 
     const where: Prisma.ArticleWhereInput = {
+      ...(ids?.length && {
+        id: {
+          in: ids,
+        },
+      }),
       ...(status && { status }),
       ...(categoryId && { categoryId }),
       ...(tag && {
@@ -141,6 +158,25 @@ export class ArticlesPrismaPsService {
       [sortBy]: order,
     };
 
+    if (!isPaginate) {
+      const articles = await this.prisma.article.findMany({
+        where,
+        orderBy,
+        include: {
+          tags: {
+            select: {
+              name: true,
+            },
+          },
+          category: { select: { name: true } },
+        },
+      });
+      return articles.map((a) => ({
+        ...a,
+        tags: a.tags.map((t) => t.name),
+      }));
+    }
+
     const take = limit ? Number(limit) : undefined;
     const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
 
@@ -150,12 +186,6 @@ export class ArticlesPrismaPsService {
         orderBy,
         skip,
         take,
-        include: {
-          author: true,
-          category: true,
-          tags: true,
-          comments: true,
-        },
       }),
       this.prisma.article.count({ where }),
     ]);
@@ -169,91 +199,113 @@ export class ArticlesPrismaPsService {
   }
 
   async createArticle(dto: CreateArticleDto) {
-    return this.prisma.article.create({
+    const createdArticle = await this.prisma.article.create({
       data: {
         id: randomUUID(),
         title: dto.title,
         content: dto.content,
-        status: dto.status ?? 'DRAFT',
+        status: dto.status ?? 'draft',
+        authorId: dto.authorId,
+        categoryId: dto.categoryId,
+        tags: dto.tags?.length
+          ? {
+              connectOrCreate: dto.tags.map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+              })),
+            }
+          : undefined,
+      },
 
-        tags: {
-          connectOrCreate: dto.tags.map((tag) => ({
-            where: { name: tag },
-            create: { name: tag },
-          })),
-        },
+      include: {
+        tags: true,
       },
     });
+
+    return {
+      ...createdArticle,
+      tags: createdArticle.tags.map((tag) => tag.name),
+      createdAt: createdArticle.createdAt.getTime(),
+      updatedAt: createdArticle.updatedAt.getTime(),
+    };
   }
 
   async findArticle(id: string) {
     const article = await this.prisma.article.findUnique({
       where: { id },
       include: {
-        author: true,
-        category: true,
         tags: true,
-        comments: true,
       },
     });
 
     if (!article) {
-      throw new NotFoundException();
+      throw new NotFoundError();
     }
 
-    return article;
+    return {
+      ...article,
+      tags: article.tags.map((tag) => tag.name),
+      createdAt: article.createdAt.getTime(),
+      updatedAt: article.updatedAt.getTime(),
+    };
   }
 
   async deleteArticle(id: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const article = await tx.article.findUnique({
-        where: { id },
-      });
-
-      if (!article) {
-        throw new NotFoundException();
-      }
-
-      const deleted = await tx.article.delete({
-        where: { id },
-      });
-
-      return deleted;
+    const article = await this.prisma.article.findUnique({
+      where: { id },
     });
+
+    if (!article) {
+      throw new NotFoundError();
+    }
+    const deleted = await this.prisma.article.delete({
+      where: { id },
+    });
+
+    return deleted;
   }
 
-  async updateArticle(id: string, dto: CreateArticleDto) {
-    return this.prisma.$transaction(async (tx) => {
-      const article = await tx.article.findUnique({
-        where: { id },
-      });
-
-      if (!article) {
-        throw new NotFoundException();
-      }
-
-      const updated = await tx.article.update({
-        where: { id },
-        data: {
-          title: dto.title,
-          content: dto.content,
-          status: dto.status ?? 'DRAFT',
-          authorId: dto.authorId ?? null,
-          categoryId: dto.categoryId ?? null,
-
-          tags: dto.tags
-            ? {
-                set: [],
-                connectOrCreate: dto.tags.map((tag) => ({
-                  where: { name: tag },
-                  create: { name: tag },
-                })),
-              }
-            : undefined,
-        },
-      });
-
-      return updated;
+  async updateArticle(id: string, dto: CreateArticleDto, user: JwtPayload) {
+    const article = await this.prisma.article.findUnique({
+      where: { id },
     });
+
+    if (!article) {
+      throw new NotFoundError();
+    }
+
+    if (user.role !== 'admin' && user.userId !== article.authorId) {
+      throw new ForbiddenError();
+    }
+
+    const updatedArticle = await this.prisma.article.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        content: dto.content,
+        status: dto.status ?? 'draft',
+        authorId: dto.authorId ?? null,
+        categoryId: dto.categoryId ?? null,
+
+        tags: dto.tags?.length
+          ? {
+              connectOrCreate: dto.tags.map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    return {
+      ...updatedArticle,
+      tags: updatedArticle.tags.map((tag) => tag.name),
+      createdAt: updatedArticle.createdAt.getTime(),
+      updatedAt: updatedArticle.updatedAt.getTime(),
+    };
   }
 }
