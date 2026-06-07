@@ -72,7 +72,7 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
     healthcheck:
-      test: curl -s http://localhost:6333/healthz | grep -q 'healthz check passed' || exit 1
+      test: curl -s http://qdrant:6333/healthz | grep -q 'healthz check passed' || exit 1
       interval: 5s
       timeout: 5s
       retries: 10
