@@ -14,6 +14,7 @@ import { AppLoggerModule } from './AppLoggerModule/appLoger.module';
 import { AiModule } from './AiModule/ai.module';
 import { UsageModule } from './UsageModule/usage.module';
 import { UsageInerceptor } from './shared/interceptors/usage.interceptor';
+import { RagModule } from './RagModule/rag.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UsageInerceptor } from './shared/interceptors/usage.interceptor';
     AppLoggerModule,
     AiModule,
     UsageModule,
+    RagModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {

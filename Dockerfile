@@ -5,7 +5,7 @@ FROM node:24-alpine AS builder
 WORKDIR /usr/src/app
 
 COPY package*.json /usr/src/app
-RUN npm ci
+RUN npm install
 
 COPY . .
 RUN npm run build
@@ -19,7 +19,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache curl
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 RUN adduser -D -h /usr/src/app appuser
 

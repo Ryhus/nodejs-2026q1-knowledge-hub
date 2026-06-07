@@ -11,6 +11,7 @@ import {
   NotFoundError,
   ForbiddenError,
 } from 'src/shared/exceptions/customErrors';
+import { ArticlesFiltersInput } from './articles-serivce.types';
 
 @Injectable()
 export class ArticlesService {
@@ -119,13 +120,14 @@ export class ArticlesService {
 export class ArticlesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllArticles(query: GetArticlesQueryDto) {
+  async getAllArticles(params: ArticlesFiltersInput) {
     let isPaginate = false;
-    if (query.page || query.limit) {
+    if (params.page || params.limit) {
       isPaginate = true;
     }
 
     const {
+      ids,
       status,
       categoryId,
       tag,
@@ -133,9 +135,14 @@ export class ArticlesPrismaPsService {
       order = 'desc',
       page = 1,
       limit = 5,
-    } = query;
+    } = params;
 
     const where: Prisma.ArticleWhereInput = {
+      ...(ids?.length && {
+        id: {
+          in: ids,
+        },
+      }),
       ...(status && { status }),
       ...(categoryId && { categoryId }),
       ...(tag && {
@@ -155,8 +162,19 @@ export class ArticlesPrismaPsService {
       const articles = await this.prisma.article.findMany({
         where,
         orderBy,
+        include: {
+          tags: {
+            select: {
+              name: true,
+            },
+          },
+          category: { select: { name: true } },
+        },
       });
-      return articles;
+      return articles.map((a) => ({
+        ...a,
+        tags: a.tags.map((t) => t.name),
+      }));
     }
 
     const take = limit ? Number(limit) : undefined;
@@ -198,6 +216,7 @@ export class ArticlesPrismaPsService {
             }
           : undefined,
       },
+
       include: {
         tags: true,
       },

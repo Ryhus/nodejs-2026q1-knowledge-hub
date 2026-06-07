@@ -11,26 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { Status } from 'generated/prisma/enums';
-
-export enum ArticleStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
-}
-
-export enum SortingOrder {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-export enum SortingArticleFields {
-  AUTHORID = 'authorId',
-  CATEGORYID = 'categoryID',
-  TITLE = 'title',
-  STATUS = 'status',
-  CREATEDAT = 'createdAt',
-  UPDATEDAT = 'updatedAt',
-}
+import { SortingOrder, SortingArticleFields } from 'src/shared/enums/enums';
 
 export class CreateArticleDto {
   @ApiProperty()

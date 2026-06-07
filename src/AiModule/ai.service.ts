@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { AI_PROVIDER, AiProvider } from './interfaces/ai-provider.interface';
+
 import { ArticlesPrismaPsService } from 'src/ArticlesModule/articles.service';
 import type {
   SummarizeArticleInput,
@@ -11,21 +11,29 @@ import { MaxArticleSummaryLength, AnalyzeArticleTask } from './enums/ai.enums';
 import { buildSummarizePrompt } from './promts/summarize.promt';
 import { buildTranslatePrompt } from './promts/translate.promt';
 import { buildAnalizePrompt } from './promts/analize.promt';
-import { AiUnavailableError } from './errors/ai.errors';
+import {
+  AiUnavailableError,
+  AiError,
+} from 'src/AiProvidersModule/errors/ai.errors';
 import {
   ServiceUnavailableException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { GeminiResponse } from './providers/gemini/providers.type';
+import {
+  TEXT_GENERATION_PROVIDER,
+  TextGenerationProvider,
+} from 'src/AiProvidersModule/ai-provider.interfaces';
 import { AiCacheService } from './ai-cache.service';
 import { validateAnalysis, validateTranslation } from './ai-validation';
 import { ConversationService } from './converssation/conversation.service';
 import { AiObservabilityService } from './ai-observability.service';
+import type { GeminiResponse } from 'src/AiProvidersModule/providers/gemini/gimini.types';
 
 @Injectable()
 export class AiService {
   constructor(
-    @Inject(AI_PROVIDER) private readonly provider: AiProvider,
+    @Inject(TEXT_GENERATION_PROVIDER)
+    private readonly provider: TextGenerationProvider,
     private readonly articleSevice: ArticlesPrismaPsService,
     private readonly aiCache: AiCacheService,
     private readonly conversation: ConversationService,
@@ -46,7 +54,7 @@ export class AiService {
     }));
 
     try {
-      const data = await this.provider.callLLM<GeminiResponse>(
+      const data = await this.provider.generate<GeminiResponse>(
         prompt,
         contextGemini,
       );
@@ -60,10 +68,15 @@ export class AiService {
       };
     } catch (error) {
       if (error instanceof AiUnavailableError) {
-        throw new ServiceUnavailableException();
+        throw new ServiceUnavailableException(undefined, {
+          cause: { message: error.message, ...error },
+        });
       }
 
-      throw new InternalServerErrorException();
+      const aiError = error as AiError;
+      throw new InternalServerErrorException(undefined, {
+        cause: { message: aiError.message, ...aiError },
+      });
     }
   }
 
@@ -87,7 +100,7 @@ export class AiService {
 
     const prompt = buildSummarizePrompt(article.content, maxLength);
     try {
-      const data = await this.provider.callLLM<GeminiResponse>(prompt);
+      const data = await this.provider.generate<GeminiResponse>(prompt);
 
       const latency = this.obs.endTimer(start);
       this.obs.recordRequest(latency);
@@ -105,10 +118,15 @@ export class AiService {
       return response;
     } catch (error) {
       if (error instanceof AiUnavailableError) {
-        throw new ServiceUnavailableException();
+        throw new ServiceUnavailableException(undefined, {
+          cause: { message: error.message, ...error },
+        });
       }
 
-      throw new InternalServerErrorException();
+      const aiError = error as AiError;
+      throw new InternalServerErrorException(undefined, {
+        cause: { message: aiError.message, ...aiError },
+      });
     }
   }
 
@@ -139,7 +157,7 @@ export class AiService {
     );
 
     try {
-      const data = await this.provider.callLLM<GeminiResponse>(prompt);
+      const data = await this.provider.generate<GeminiResponse>(prompt);
 
       const latency = this.obs.endTimer(start);
       this.obs.recordRequest(latency);
@@ -156,10 +174,15 @@ export class AiService {
       return response;
     } catch (error) {
       if (error instanceof AiUnavailableError) {
-        throw new ServiceUnavailableException();
+        throw new ServiceUnavailableException(undefined, {
+          cause: { message: error.message, ...error },
+        });
       }
 
-      throw new InternalServerErrorException();
+      const aiError = error as AiError;
+      throw new InternalServerErrorException(undefined, {
+        cause: { message: aiError.message, ...aiError },
+      });
     }
   }
 
@@ -171,7 +194,7 @@ export class AiService {
     const prompt = buildAnalizePrompt(article.content, task);
 
     try {
-      const data = await this.provider.callLLM<GeminiResponse>(prompt);
+      const data = await this.provider.generate<GeminiResponse>(prompt);
 
       const latency = this.obs.endTimer(start);
       this.obs.recordRequest(latency);
@@ -185,10 +208,15 @@ export class AiService {
       return { articleId, analysis, suggestions, severity };
     } catch (error) {
       if (error instanceof AiUnavailableError) {
-        throw new ServiceUnavailableException();
+        throw new ServiceUnavailableException(undefined, {
+          cause: { message: error.message, ...error },
+        });
       }
 
-      throw new InternalServerErrorException();
+      const aiError = error as AiError;
+      throw new InternalServerErrorException(undefined, {
+        cause: { message: aiError.message, ...aiError },
+      });
     }
   }
 }
