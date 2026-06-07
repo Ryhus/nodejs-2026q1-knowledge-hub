@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ArticlesService } from './articles.service';
+import { ArticlesPrismaPsService } from './articles.service';
 import { ArticlesController } from './articles.controller';
-import { InmemoryDatabaseModule } from 'src/inmemoryDB/module.inmemoryDb';
-import { ArticlesRepository } from './articles.repository';
+import { PrismaModule } from 'src/PrismaModule/prisma.module';
 
 @Module({
-  imports: [InmemoryDatabaseModule],
+  imports: [PrismaModule],
   controllers: [ArticlesController],
-  providers: [ArticlesService, ArticlesRepository],
-  exports: [ArticlesRepository, ArticlesService],
+  providers: [ArticlesPrismaPsService],
+  exports: [ArticlesPrismaPsService],
 })
 export class ArticlesModule {}

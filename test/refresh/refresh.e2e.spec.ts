@@ -79,6 +79,7 @@ describe('Refresh (e2e)', () => {
       expect(response.body).toBeInstanceOf(Object);
 
       const { accessToken, refreshToken } = response.body as RefreshResponse;
+
       expect(accessToken).toBeDefined();
       expect(typeof accessToken).toBe('string');
 

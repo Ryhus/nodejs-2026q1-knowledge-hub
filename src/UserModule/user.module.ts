@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
-import { InmemoryDatabaseModule } from 'src/inmemoryDB/module.inmemoryDb';
-import { UserService } from './user.service';
-import { UsersRepository } from './user.reposiroty';
-import { CommentModule } from 'src/CommentsModule/comments.module';
-import { ArticlesModule } from 'src/ArticlesModule/articles.module';
-
+import { UserPrismaPsService } from './user.service';
+import { UsersPrismaPsRepository } from './user.reposiroty';
+import { PrismaModule } from 'src/PrismaModule/prisma.module';
+import { PasswordModule } from 'src/PasswordModule/password.module';
 @Module({
-  imports: [InmemoryDatabaseModule, CommentModule, ArticlesModule],
+  imports: [PrismaModule, PasswordModule],
   controllers: [UserController],
-  providers: [UserService, UsersRepository],
+  providers: [UserPrismaPsService, UsersPrismaPsRepository],
 })
 export class UserModule {}

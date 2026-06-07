@@ -10,26 +10,8 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-
-export enum ArticleStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
-}
-
-export enum SortingOrder {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-export enum SortingArticleFields {
-  AUTHORID = 'authorId',
-  CATEGORYID = 'categoryID',
-  TITLE = 'title',
-  STATUS = 'status',
-  CREATEDAT = 'createdAt',
-  UPDATEDAT = 'updatedAt',
-}
+import { Status } from 'generated/prisma/enums';
+import { SortingOrder, SortingArticleFields } from 'src/shared/enums/enums';
 
 export class CreateArticleDto {
   @ApiProperty()
@@ -42,8 +24,8 @@ export class CreateArticleDto {
 
   @ApiProperty({ enum: ['draft', 'published', 'archived'] })
   @IsOptional()
-  @IsEnum(ArticleStatus)
-  status: ArticleStatus;
+  @IsEnum(Status)
+  status: Status;
 
   @ApiProperty()
   @IsOptional()
@@ -66,8 +48,8 @@ export class CreateArticleDto {
 export class GetArticlesQueryDto {
   @ApiProperty()
   @IsOptional()
-  @IsEnum(ArticleStatus)
-  status?: ArticleStatus;
+  @IsEnum(Status)
+  status?: Status;
 
   @ApiProperty()
   @IsOptional()

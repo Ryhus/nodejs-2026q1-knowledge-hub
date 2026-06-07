@@ -3,11 +3,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppLoggerService } from 'src/AppLoggerModule/appLogger.service';
+import { PrismaService } from './PrismaModule/prisma.service';
 
 const PORT = process.env.PORT || String(4000);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const logger = app.get(AppLoggerService);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -16,6 +20,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useLogger(logger);
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')
@@ -28,5 +33,34 @@ async function bootstrap() {
   SwaggerModule.setup('/doc', app, documentFactory);
 
   await app.listen(PORT);
+
+  const shutdown = async (reason: string, error?: any) => {
+    try {
+      logger.error({
+        level: 'fatal',
+
+        message: reason,
+
+        trace: error instanceof Error ? error.stack : String(error),
+      });
+
+      await app.close();
+
+      const prisma = app.get(PrismaService);
+      await prisma.$disconnect();
+    } catch (e) {
+      console.error('Shutdown error:', e);
+    } finally {
+      process.exit(1);
+    }
+  };
+
+  process.on('uncaughtException', (error) => {
+    shutdown('Uncaught Exception', error);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    shutdown('Unhandled Rejection', reason);
+  });
 }
 bootstrap();
