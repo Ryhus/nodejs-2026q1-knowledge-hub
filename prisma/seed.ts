@@ -1,8 +1,7 @@
 import 'dotenv/config';
-import { Role, Status } from 'generated/prisma/enums';
+import { Role } from 'generated/prisma/enums';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from 'generated/prisma/client';
-import { randomUUID } from 'node:crypto';
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
@@ -10,157 +9,76 @@ const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 export async function runSeed() {
-  const admin = await prisma.user.create({
-    data: {
-      id: randomUUID(),
-      login: 'admin',
-      password: 'hashed_password',
+  const adminUser = await prisma.user.upsert({
+    where: { login: 'Test1' },
+    update: {},
+    create: {
+      id: 'ab9f1410-6c22-4516-8d57-686f2c048848',
+      login: 'Test1',
+      password: '$2b$10$DXXtCwlQrmyW5cI0aFpnr.ISTiTaKJrVYiyoYOHFwKWaKdCQaVUIe',
       role: Role.admin,
     },
   });
 
-  const editor = await prisma.user.create({
-    data: {
-      id: randomUUID(),
-      login: 'editor',
-      password: 'hashed_password',
-      role: Role.editor,
+  const viewerUser = await prisma.user.upsert({
+    where: { login: 'Test2' },
+    update: {},
+    create: {
+      id: '0a423074-8b40-44c6-9c93-514ee3a66308',
+      login: 'Test2',
+      password: '$2b$10$DXXtCwlQrmyW5cI0aFpnr.ISTiTaKJrVYiyoYOHFwKWaKdCQaVUIe',
+      role: Role.viewer,
     },
   });
 
-  const tech = await prisma.category.create({
-    data: {
-      id: randomUUID(),
-      name: 'Tech',
-      description: 'Tech news',
+  const gamesCategory = await prisma.category.upsert({
+    where: { id: '2088cb52-d4f0-4385-973c-f5916756a8fc' },
+    update: {},
+    create: {
+      id: '2088cb52-d4f0-4385-973c-f5916756a8fc',
+      name: 'games',
+      description: 'computer games',
     },
   });
 
-  const life = await prisma.category.create({
-    data: {
-      id: randomUUID(),
-      name: 'Life',
-      description: 'Life articles',
+  const reactCategory = await prisma.category.upsert({
+    where: { id: '64d6556b-0955-43d2-acc5-66a72326c837' },
+    update: {},
+    create: {
+      id: '64d6556b-0955-43d2-acc5-66a72326c837',
+      name: 'react',
+      description: 'react',
     },
   });
 
-  const sports = await prisma.category.create({
-    data: {
-      id: randomUUID(),
-      name: 'Sports',
-      description: 'Sports news',
+  const animalsCategory = await prisma.category.upsert({
+    where: { id: '65a5cbe3-4b05-444d-94a3-2d7b86817705' },
+    update: {},
+    create: {
+      id: '65a5cbe3-4b05-444d-94a3-2d7b86817705',
+      name: 'animals',
+      description: 'animals',
     },
   });
 
-  const ai = await prisma.tag.create({
-    data: { id: randomUUID(), name: 'AI' },
-  });
-  const web = await prisma.tag.create({
-    data: { id: randomUUID(), name: 'Web' },
-  });
-  const health = await prisma.tag.create({
-    data: { id: randomUUID(), name: 'Health' },
-  });
-  const react = await prisma.tag.create({
-    data: { id: randomUUID(), name: 'React' },
-  });
-  const node = await prisma.tag.create({
-    data: { id: randomUUID(), name: 'Node' },
+  const ragCategory = await prisma.category.upsert({
+    where: { id: '7d5e3aa6-6d92-487b-afd5-2f06336386dd' },
+    update: {},
+    create: {
+      id: '7d5e3aa6-6d92-487b-afd5-2f06336386dd',
+      name: 'rag',
+      description: 'rag',
+    },
   });
 
-  const articles = await Promise.all([
-    prisma.article.create({
-      data: {
-        id: randomUUID(),
-        title: 'AI Future',
-        content: 'AI content',
-        status: Status.published,
-        authorId: admin.id,
-        categoryId: tech.id,
-        tags: {
-          connect: [{ id: ai.id }, { id: web.id }],
-        },
-      },
-    }),
-
-    prisma.article.create({
-      data: {
-        id: randomUUID(),
-        title: 'Health Tips',
-        content: 'Health content',
-        status: Status.draft,
-        authorId: editor.id,
-        categoryId: life.id,
-        tags: {
-          connect: [{ id: health.id }],
-        },
-      },
-    }),
-
-    prisma.article.create({
-      data: {
-        id: randomUUID(),
-        title: 'React Guide',
-        content: 'React content',
-        status: Status.published,
-        authorId: admin.id,
-        categoryId: tech.id,
-        tags: {
-          connect: [{ id: react.id }, { id: node.id }],
-        },
-      },
-    }),
-
-    prisma.article.create({
-      data: {
-        id: randomUUID(),
-        title: 'Sports News',
-        content: 'Sports content',
-        status: Status.archived,
-        authorId: editor.id,
-        categoryId: sports.id,
-        tags: {
-          connect: [{ id: web.id }],
-        },
-      },
-    }),
-
-    prisma.article.create({
-      data: {
-        id: randomUUID(),
-        title: 'Node Basics',
-        content: 'Node content',
-        status: Status.published,
-        authorId: admin.id,
-        categoryId: tech.id,
-        tags: {
-          connect: [{ id: node.id }],
-        },
-      },
-    }),
-  ]);
-
-  await prisma.comment.createMany({
-    data: [
-      {
-        id: randomUUID(),
-        content: 'Great article!',
-        authorId: admin.id,
-        articleId: articles[0].id,
-      },
-      {
-        id: randomUUID(),
-        content: 'Nice work',
-        authorId: editor.id,
-        articleId: articles[0].id,
-      },
-      {
-        id: randomUUID(),
-        content: 'Very helpful',
-        authorId: editor.id,
-        articleId: articles[2].id,
-      },
-    ],
+  const gitCategory = await prisma.category.upsert({
+    where: { id: 'ff28c3b9-9630-40d9-a801-ba6d04110baa' },
+    update: {},
+    create: {
+      id: 'ff28c3b9-9630-40d9-a801-ba6d04110baa',
+      name: 'git',
+      description: 'git',
+    },
   });
 }
 
