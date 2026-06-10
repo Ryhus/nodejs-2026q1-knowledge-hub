@@ -18,9 +18,12 @@ import {
 import { Roles } from 'src/shared/decorators/roles.decorators';
 import { Role } from 'generated/prisma/enums';
 import { throttlers } from './ai-throttler.config';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('ai')
 @Controller('ai/articles')
 @SetMetadata('track', 'ai')
+@ApiBearerAuth('access-token')
 export class AiArticlesController {
   constructor(private aiService: AiService) {}
 

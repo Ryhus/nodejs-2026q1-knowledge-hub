@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ArticlesPrismaPsService } from './articles.service';
 import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/shared/decorators/roles.decorators';
 import { Role } from 'generated/prisma/enums';
 import { CurrentUser } from 'src/shared/decorators/currentUser.decorator';
@@ -20,6 +20,7 @@ import { JwtPayload } from 'src/shared/types/auth.types';
 
 @ApiTags('article')
 @Controller('article')
+@ApiBearerAuth('access-token')
 export class ArticlesController {
   constructor(private articlesService: ArticlesPrismaPsService) {}
 

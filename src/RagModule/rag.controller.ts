@@ -15,8 +15,11 @@ import {
   RagChatRequestDto,
 } from './dto/rag-request.dto';
 import { RagSearchResponseDto } from './dto/rag-response.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('rag')
 @Controller('ai/rag')
+@ApiBearerAuth('access-token')
 export class RagController {
   constructor(private readonly rag: RagService) {}
 

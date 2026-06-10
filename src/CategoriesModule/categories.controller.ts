@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 import { CategoriesPrismaPsService } from './categories.service';
 import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/shared/decorators/roles.decorators';
 
 @ApiTags('category')
 @Controller('category')
+@ApiBearerAuth('access-token')
 export class CategoriesController {
   constructor(private categoriesService: CategoriesPrismaPsService) {}
 

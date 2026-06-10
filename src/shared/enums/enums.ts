@@ -17,3 +17,9 @@ export enum SortingArticleFields {
   CREATEDAT = 'createdAt',
   UPDATEDAT = 'updatedAt',
 }
+
+export enum UserRole {
+  ADMIN = 'admin',
+  EDITOR = 'editor',
+  viewer = 'viewer',
+}

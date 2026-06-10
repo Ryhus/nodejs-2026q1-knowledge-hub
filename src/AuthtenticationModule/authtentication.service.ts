@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthDto } from './authtentication.dto';
+import { AuthDto } from './dto/auth-request.dto';
 import { PasswordService } from 'src/PasswordModule/password.service';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { JwtService } from '@nestjs/jwt';

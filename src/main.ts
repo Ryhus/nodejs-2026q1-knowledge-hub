@@ -28,9 +28,47 @@ async function bootstrap() {
       'The Knowledge Hub allows users to create, edit, and organize articles by categories and tags',
     )
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/doc', app, documentFactory);
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  document.tags = [
+    {
+      name: 'auth',
+      description: 'Authentication and authorization',
+    },
+    {
+      name: 'user',
+      description: 'User management',
+    },
+    { name: 'article', description: 'Articles CRUD and publishing' },
+    {
+      name: 'category',
+      description: 'Categories management',
+    },
+    {
+      name: 'comment',
+      description: 'Comments management',
+    },
+    {
+      name: 'ai',
+      description: 'AI operations',
+    },
+    {
+      name: 'rag',
+      description: 'RAG service',
+    },
+  ];
+
+  SwaggerModule.setup('/doc', app, document);
 
   await app.listen(PORT);
 

@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { UsersPrismaPsRepository, UsersRepository } from './user.reposiroty';
-import { CreateUserDto, UpdatePasswordDto, GetUsersQueryDto } from './user.dto';
+import {
+  CreateUserDto,
+  UpdatePasswordDto,
+  GetUsersQueryDto,
+} from './dto/user-request.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { CommentRepository } from 'src/CommentsModule/comments.repository';
 import { randomUUID } from 'node:crypto';

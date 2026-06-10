@@ -12,9 +12,12 @@ import { Roles } from 'src/shared/decorators/roles.decorators';
 import { AiService } from './ai.service';
 import { GenerateContentDto } from './ai.dto';
 import { throttlers } from './ai-throttler.config';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('ai')
 @Controller('ai')
 @SetMetadata('track', 'ai')
+@ApiBearerAuth('access-token')
 export class AiController {
   constructor(private aiService: AiService) {}
 

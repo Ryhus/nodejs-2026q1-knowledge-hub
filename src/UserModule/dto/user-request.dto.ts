@@ -1,13 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { Role } from 'generated/prisma/enums';
-
-export enum UserRole {
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
-}
 
 export enum SortingUsersFields {
   LOGIN = 'login',
@@ -22,49 +16,64 @@ export enum SortingOrder {
 }
 
 export class CreateUserDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'userLogin' })
   @IsString()
   login: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'userPassword' })
   @IsString()
   password: string;
 
-  @ApiProperty({ enum: ['admin', 'editor', 'viewer'] })
+  @ApiPropertyOptional({
+    enum: ['admin', 'editor', 'viewer'],
+    example: 'viewer',
+  })
   @IsOptional()
   @IsEnum(Role)
   role?: Role;
 }
 
 export class UpdatePasswordDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'oldPassword' })
   @IsString()
   oldPassword: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'newPassword' })
   @IsString()
   newPassword: string;
 }
 
 export class GetUsersQueryDto {
-  @ApiProperty()
+  @ApiPropertyOptional({
+    enum: SortingUsersFields,
+    description: 'Field to sort users by',
+  })
   @IsOptional()
   @IsEnum(SortingUsersFields)
   sortBy?: SortingUsersFields;
 
-  @ApiProperty()
+  @ApiPropertyOptional({
+    enum: SortingOrder,
+    description: 'Sort direction',
+  })
   @IsOptional()
   @IsEnum(SortingOrder)
   order?: SortingOrder;
 
-  @ApiProperty()
+  @ApiPropertyOptional({
+    description: 'One-based page number for pagination',
+    example: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number;
 
-  @ApiProperty()
+  @ApiPropertyOptional({
+    description: 'Number of users to return per page',
+    example: 5,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

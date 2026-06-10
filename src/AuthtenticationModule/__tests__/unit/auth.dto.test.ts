@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { validate } from 'class-validator';
-import { AuthDto } from 'src/AuthtenticationModule/authtentication.dto';
+import { AuthDto } from 'src/AuthtenticationModule/dto/auth-request.dto';
 
 describe('authDto', () => {
   it('should pass with valid data', async () => {

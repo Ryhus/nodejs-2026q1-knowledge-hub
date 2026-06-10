@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { CommentPrismaPsService } from './comments.service';
 import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from 'generated/prisma/enums';
 import { Roles } from 'src/shared/decorators/roles.decorators';
 import { CurrentUser } from 'src/shared/decorators/currentUser.decorator';
@@ -19,6 +19,7 @@ import { JwtPayload } from 'src/shared/types/auth.types';
 
 @ApiTags('comment')
 @Controller('comment')
+@ApiBearerAuth('access-token')
 export class CommentController {
   constructor(private commentService: CommentPrismaPsService) {}
 

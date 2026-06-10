@@ -4,7 +4,7 @@ import {
   CreateUserDto,
   UpdatePasswordDto,
   GetUsersQueryDto,
-} from 'src/UserModule/user.dto';
+} from 'src/UserModule/dto/user-request.dto';
 import { plainToInstance } from 'class-transformer';
 import { Role } from 'generated/prisma/enums';
 
