@@ -30,8 +30,13 @@ export class AuthtenticationController {
     description:
       'Creates the new user in the system with the login and password',
   })
-  @ApiCreatedResponse({ type: UserResponseDto })
-  @ApiBadRequestResponse()
+  @ApiCreatedResponse({
+    type: UserResponseDto,
+    description: 'Resource created successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
   async signup(@Body() authDto: AuthDto) {
     return this.authService.signup(authDto);
   }
@@ -45,9 +50,14 @@ export class AuthtenticationController {
     description:
       'Login the user in the system using login and password. Creates access and refresh tokens',
   })
-  @ApiOkResponse({ type: AuthTokensResponseDto })
-  @ApiBadRequestResponse()
-  @ApiForbiddenResponse()
+  @ApiOkResponse({
+    type: AuthTokensResponseDto,
+    description: 'Request successful',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiForbiddenResponse({ description: 'Forbidden. Insufficient permissions' })
   async login(@Body() authDto: AuthDto) {
     return this.authService.login(authDto);
   }
@@ -59,9 +69,14 @@ export class AuthtenticationController {
   @ApiOperation({
     summary: 'Refresh the access token, and update the refresh token',
   })
-  @ApiOkResponse({ type: AuthTokensResponseDto })
-  @ApiBadRequestResponse()
-  @ApiForbiddenResponse()
+  @ApiOkResponse({
+    type: AuthTokensResponseDto,
+    description: 'Request successful',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiForbiddenResponse({ description: 'Forbidden. Insufficient permissions' })
   async refresh(@Body('refreshToken') refreshToken: string) {
     if (!refreshToken) {
       throw new UnauthorizedError();
@@ -77,8 +92,14 @@ export class AuthtenticationController {
     summary: 'Logout the user from the system',
     description: 'Logout the user from the system, deleting refresh token',
   })
-  @ApiBadRequestResponse()
-  @ApiForbiddenResponse()
+  @ApiOkResponse({
+    type: AuthTokensResponseDto,
+    description: 'Request successful',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiForbiddenResponse({ description: 'Forbidden. Insufficient permissions' })
   async logout(@Body('refreshToken') refreshToken: string) {
     return this.authService.logout(refreshToken);
   }

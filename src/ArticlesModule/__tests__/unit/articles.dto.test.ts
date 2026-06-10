@@ -3,7 +3,7 @@ import { validate } from 'class-validator';
 import {
   CreateArticleDto,
   GetArticlesQueryDto,
-} from 'src/ArticlesModule/articles.dto';
+} from 'src/ArticlesModule/dto/articles-request.dto';
 import { plainToInstance } from 'class-transformer';
 import { Status } from 'generated/prisma/enums';
 

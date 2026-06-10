@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
-import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
+import {
+  CreateArticleDto,
+  GetArticlesQueryDto,
+} from './dto/articles-request.dto';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { Prisma } from 'generated/prisma/client';

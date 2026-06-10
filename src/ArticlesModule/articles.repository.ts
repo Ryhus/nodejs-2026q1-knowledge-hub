@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InMemoryDb } from 'src/inmemoryDB/inmemorydb';
 import type { Article } from 'src/inmemoryDB/types';
-import { GetArticlesQueryDto } from './articles.dto';
+import { GetArticlesQueryDto } from './dto/articles-request.dto';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 

@@ -23,10 +23,12 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
   ApiParam,
+  ApiUnauthorizedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiForbiddenResponse,
   ApiBearerAuth,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 
 import { Role } from 'generated/prisma/enums';
@@ -47,7 +49,13 @@ export class UserController {
     description:
       'Retrieves a paginated list of users. Supports optional sorting and pagination via query parameters.',
   })
-  @ApiOkResponse({ type: GetUsersResponseDto })
+  @ApiOkResponse({
+    type: GetUsersResponseDto,
+    description: 'Request successful',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Client must be authorized to use API',
+  })
   async getAll(@Query() query: GetUsersQueryDto) {
     return this.userService.getAllUsers(query);
   }
@@ -58,8 +66,16 @@ export class UserController {
     summary: 'Create user',
     description: 'Creates a new user account in the system',
   })
-  @ApiCreatedResponse({ type: UserResponseDto })
-  @ApiBadRequestResponse()
+  @ApiCreatedResponse({
+    type: UserResponseDto,
+    description: 'Resource created successfully',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Client must be authorized to use API',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
@@ -73,8 +89,14 @@ export class UserController {
       'Deletes an existing user account from the system by their unique ID',
   })
   @ApiParam({ name: 'id', example: '550e8400-e29b-41d4-a716-446655440000' })
-  @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
+  @ApiNoContentResponse({ description: 'Resource deleted successfully' })
+  @ApiUnauthorizedResponse({
+    description: 'Client must be authorized to use API',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiNotFoundResponse({ description: 'Requested Entity not found' })
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.userService.deleteUser(id);
   }
@@ -86,9 +108,14 @@ export class UserController {
     description: 'Retrieves a single user account by their unique identifier',
   })
   @ApiParam({ name: 'id', example: '550e8400-e29b-41d4-a716-446655440000' })
-  @ApiOkResponse({ type: UserResponseDto })
-  @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
+  @ApiOkResponse({ type: UserResponseDto, description: 'Request successful' })
+  @ApiUnauthorizedResponse({
+    description: 'Client must be authorized to use API',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiNotFoundResponse({ description: 'Requested Entity not found' })
   async getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.userService.findUser(id);
   }
@@ -100,10 +127,15 @@ export class UserController {
     description: 'Updating user password',
   })
   @ApiParam({ name: 'id', example: '550e8400-e29b-41d4-a716-446655440000' })
-  @ApiOkResponse({ type: UserResponseDto })
-  @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
-  @ApiForbiddenResponse()
+  @ApiOkResponse({ type: UserResponseDto, description: 'Request successful' })
+  @ApiUnauthorizedResponse({
+    description: 'Client must be authorized to use API',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid body, query or params arguments',
+  })
+  @ApiNotFoundResponse({ description: 'Requested Entity not found' })
+  @ApiForbiddenResponse({ description: 'Forbidden. Insufficient permissions' })
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
