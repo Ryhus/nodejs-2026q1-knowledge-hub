@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
-import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
+import {
+  CreateCommentDto,
+  GetCommentsByArticleDto,
+} from './dto/comments-request.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
@@ -58,7 +61,7 @@ export class CommentService {
     return { data: data, total: total, page: page, limit: limit };
   }
 
-  createComment(createCommentDto: createCommentDto) {
+  createComment(createCommentDto: CreateCommentDto) {
     const article = this.inMemoSharedRepo.findArticleById(
       createCommentDto.articleId,
     );
@@ -72,7 +75,6 @@ export class CommentService {
     createdComment.id = randomUUID();
     createdComment.content = createCommentDto.content;
     createdComment.articleId = createCommentDto.articleId;
-    createdComment.authorId = createCommentDto.authorId || null;
 
     createdComment.createdAt = currentTimestamp;
 
@@ -159,7 +161,7 @@ export class CommentPrismaPsService {
     };
   }
 
-  async createComment(dto: createCommentDto) {
+  async createComment(dto: CreateCommentDto) {
     const article = await this.prisma.article.findUnique({
       where: { id: dto.articleId },
     });
@@ -173,7 +175,6 @@ export class CommentPrismaPsService {
         id: randomUUID(),
         content: dto.content,
         articleId: dto.articleId,
-        authorId: dto.authorId ?? null,
       },
     });
     return {

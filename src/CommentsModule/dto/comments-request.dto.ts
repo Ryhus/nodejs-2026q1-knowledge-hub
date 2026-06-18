@@ -19,44 +19,57 @@ export enum SortingOrder {
   DESC = 'desc',
 }
 
-export class createCommentDto {
-  @ApiProperty()
+export class CreateCommentDto {
+  @ApiProperty({
+    description: 'Comment content for the article',
+    example: 'This is realy interesing article!',
+  })
   @IsString()
   content: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Article ID',
+    example: '3f9c8d52-7a41-4e6b-9c12-8f5a3d7b2e91',
+  })
   @IsUUID()
   articleId: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsUUID()
-  authorId: string;
 }
 
 export class GetCommentsByArticleDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Article ID',
+    example: '3f9c8d52-7a41-4e6b-9c12-8f5a3d7b2e91',
+  })
   @IsUUID()
   articleId: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: SortingCommentFields.AUTHORID,
+    description: 'Available sorting field',
+  })
   @IsOptional()
   @IsEnum(SortingCommentFields)
   sortBy?: SortingCommentFields;
 
-  @ApiProperty()
+  @ApiProperty({ example: SortingOrder.ASC, description: 'Sorting direction' })
   @IsOptional()
   @IsEnum(SortingOrder)
   order?: SortingOrder;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: 1,
+    description: 'Page for pagination. Starts with 1',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: 5,
+    description: 'Number of comments on the page. Minimum 1',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
