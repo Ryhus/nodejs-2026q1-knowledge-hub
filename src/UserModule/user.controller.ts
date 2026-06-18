@@ -47,7 +47,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Returns array of users',
     description:
-      'Retrieves a paginated list of users. Supports optional sorting and pagination via query parameters.',
+      'Retrieves object with paginated list of users, total users, page number and limit. Supports optional sorting and pagination via query parameters.',
   })
   @ApiOkResponse({
     type: GetUsersResponseDto,

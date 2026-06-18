@@ -2,17 +2,13 @@ import { IsString, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { Role } from 'generated/prisma/enums';
+import { SortingOrder } from './../../shared/enums/enums';
 
 export enum SortingUsersFields {
   LOGIN = 'login',
   ROLE = 'role',
   CREATEDAT = 'createdAt',
   UPDATEDAT = 'updatedAt',
-}
-
-export enum SortingOrder {
-  ASC = 'asc',
-  DESC = 'desc',
 }
 
 export class CreateUserDto {

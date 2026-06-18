@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { CategoriesRepository } from './categories.repository';
 import { Category } from 'src/inmemoryDB/types';
 import { randomUUID } from 'node:crypto';
-import { CreateCategoryDto, GetCategoriesQueryDto } from './categories.dto';
+import {
+  CreateCategoryDto,
+  GetCategoriesQueryDto,
+} from './dto/categories-request.dto';
 import { ArticlesRepository } from 'src/ArticlesModule/articles.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { NotFoundError } from 'src/shared/exceptions/customErrors';

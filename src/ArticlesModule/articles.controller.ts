@@ -46,9 +46,9 @@ export class ArticlesController {
   @Roles(Role.admin, Role.viewer, Role.editor)
   @Get()
   @ApiOperation({
-    summary: 'Get list of articles',
+    summary: 'Get articles',
     description:
-      'Returns list of articles.Paginateion, filtration and sorting can be applied. All users can get articles',
+      'Retrieves object with paginated list of articles, total articles, page number and limit. Supports optional sorting, filtering and pagination via query parameters.',
   })
   @ApiOkResponse({
     type: GetArticlesResponseDto,
@@ -78,7 +78,6 @@ export class ArticlesController {
   @ApiBadRequestResponse({
     description: 'Invalid body, query or params arguments',
   })
-  @ApiNotFoundResponse({ description: 'Requested Entity not found' })
   async create(@Body() createArticleDto: CreateArticleDto) {
     return this.articlesService.createArticle(createArticleDto);
   }
@@ -128,6 +127,7 @@ export class ArticlesController {
 
   @Roles(Role.admin, Role.editor)
   @Put(':id')
+  @ApiParam({ name: 'id', example: '3f9c8d52-7a41-4e6b-9c12-8f5a3d7b2e91' })
   @ApiOperation({
     summary: 'Update the article',
     description: 'Only admin or the author can update the article',
