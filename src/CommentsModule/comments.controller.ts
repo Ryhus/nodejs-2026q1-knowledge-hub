@@ -21,7 +21,6 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
   ApiBadRequestResponse,
-  ApiForbiddenResponse,
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
   ApiParam,
