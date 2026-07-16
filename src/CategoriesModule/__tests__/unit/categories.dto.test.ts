@@ -6,7 +6,7 @@ import {
   GetCategoriesQueryDto,
   SortingCategories,
   SortingOrder,
-} from 'src/CategoriesModule/categories.dto';
+} from 'src/CategoriesModule/dto/categories-request.dto';
 
 describe('CreateCategoryDto', () => {
   it('should pass validation with correct data', async () => {

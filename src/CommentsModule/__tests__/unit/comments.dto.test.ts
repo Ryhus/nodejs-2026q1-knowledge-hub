@@ -1,19 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { validate } from 'class-validator';
 import {
-  createCommentDto,
+  CreateCommentDto,
   GetCommentsByArticleDto,
-} from 'src/CommentsModule/comments.dto';
-import { SortingOrder } from 'src/CommentsModule/comments.dto';
-import { SortingCommentFields } from 'src/CommentsModule/comments.dto';
+} from 'src/CommentsModule/dto/comments-request.dto';
+import { SortingOrder } from 'src/CommentsModule/dto/comments-request.dto';
+import { SortingCommentFields } from 'src/CommentsModule/dto/comments-request.dto';
 import { plainToInstance } from 'class-transformer';
 
 describe('createCommentDto', () => {
   it('should pass validation with correct data', async () => {
-    const dto = new createCommentDto();
+    const dto = new CreateCommentDto();
     dto.content = 'hello';
     dto.articleId = '550e8400-e29b-41d4-a716-446655440000';
-    dto.authorId = '550e8400-e29b-41d4-a716-446655440001';
 
     const errors = await validate(dto);
 
@@ -21,7 +20,7 @@ describe('createCommentDto', () => {
   });
 
   it('should fail when content is missing', async () => {
-    const dto = new createCommentDto();
+    const dto = new CreateCommentDto();
     dto.articleId = '550e8400-e29b-41d4-a716-446655440000';
 
     const errors = await validate(dto);
@@ -30,7 +29,7 @@ describe('createCommentDto', () => {
   });
 
   it('should fail when articleId is not UUID', async () => {
-    const dto = new createCommentDto();
+    const dto = new CreateCommentDto();
     dto.content = 'text';
     dto.articleId = 'invalid-uuid';
 
@@ -40,7 +39,7 @@ describe('createCommentDto', () => {
   });
 
   it('should pass without authorId', async () => {
-    const dto = new createCommentDto();
+    const dto = new CreateCommentDto();
     dto.content = 'text';
     dto.articleId = '550e8400-e29b-41d4-a716-446655440000';
 

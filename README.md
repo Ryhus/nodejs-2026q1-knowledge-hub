@@ -90,6 +90,7 @@ Create a `.env` file in the root directory and configure the following variables
 ### Database
 
 - DATABASE_URL — PostgreSQL connection string
+- TEST_DATABASE_URL — optional PostgreSQL connection string for E2E tests run from the host machine
 - POSTGRES_USER — database username
 - POSTGRES_PASSWORD — database password
 - POSTGRES_DB — database name
@@ -136,6 +137,19 @@ Run tests:
 - Run E2E refresh token test: `npm run test:refresh`
 - Run unit tests for services: `npm run test:unit`
 - Run unit tests for services with coverage: `npm run test:coverage`
+
+## Database seed
+
+The seed creates an administrator account, three categories, three articles with tags, and three related comments. It runs automatically after Prisma migrations when the Docker stack starts and only seeds a database that has no users.
+
+Default administrator credentials:
+
+- Login: `admin`
+- Password: `Admin123!`
+
+To run the seed manually after applying migrations:
+
+`npm run db:seed`
 
 ## API documentation
 

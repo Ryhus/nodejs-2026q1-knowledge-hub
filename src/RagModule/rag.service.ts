@@ -41,10 +41,23 @@ export class RagService {
 
       const articleStatus = onlyPublished ? Status.published : undefined;
 
-      const articles = (await this.articleService.getAllArticles({
-        status: articleStatus,
-        ids: articleIds,
-      })) as ArticleResult[];
+      const articles: ArticleResult[] = [];
+      const limit = 100;
+      let page = 1;
+      let total = 0;
+
+      do {
+        const response = await this.articleService.getAllArticles({
+          status: articleStatus,
+          ids: articleIds,
+          page,
+          limit,
+        });
+
+        articles.push(...response.data);
+        total = response.total;
+        page++;
+      } while (articles.length < total);
 
       const result: ReindexResult = {
         indexedArticles: 0,

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ArticlesRepository } from './articles.repository';
 import { Article } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
-import { CreateArticleDto, GetArticlesQueryDto } from './articles.dto';
+import {
+  CreateArticleDto,
+  GetArticlesQueryDto,
+} from './dto/articles-request.dto';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
 import { Prisma } from 'generated/prisma/client';
@@ -42,18 +45,14 @@ export class ArticlesService {
         : String(valB).localeCompare(String(valA));
     });
 
-    if (!getArticlesQueryDto.page && !getArticlesQueryDto.limit) {
-      return articles;
-    }
-
     const page = getArticlesQueryDto.page ?? 1;
     const limit = getArticlesQueryDto.limit ?? 5;
 
     const offset = (page - 1) * limit;
     const data = articles.slice(offset, offset + limit);
-    const total = data.length;
+    const total = articles.length;
 
-    return { data: data, total: total, page: page, limit: limit };
+    return { data, total, page, limit };
   }
 
   createArticle(createArticleDto: CreateArticleDto) {
@@ -121,11 +120,6 @@ export class ArticlesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllArticles(params: ArticlesFiltersInput) {
-    let isPaginate = false;
-    if (params.page || params.limit) {
-      isPaginate = true;
-    }
-
     const {
       ids,
       status,
@@ -158,27 +152,8 @@ export class ArticlesPrismaPsService {
       [sortBy]: order,
     };
 
-    if (!isPaginate) {
-      const articles = await this.prisma.article.findMany({
-        where,
-        orderBy,
-        include: {
-          tags: {
-            select: {
-              name: true,
-            },
-          },
-          category: { select: { name: true } },
-        },
-      });
-      return articles.map((a) => ({
-        ...a,
-        tags: a.tags.map((t) => t.name),
-      }));
-    }
-
-    const take = limit ? Number(limit) : undefined;
-    const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.article.findMany({
@@ -193,8 +168,8 @@ export class ArticlesPrismaPsService {
     return {
       data,
       total,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
+      page: Number(page),
+      limit: take,
     };
   }
 

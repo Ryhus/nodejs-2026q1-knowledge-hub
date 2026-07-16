@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CommentRepository } from './comments.repository';
 import { randomUUID } from 'node:crypto';
-import { createCommentDto, GetCommentsByArticleDto } from './comments.dto';
+import {
+  CreateCommentDto,
+  GetCommentsByArticleDto,
+} from './dto/comments-request.dto';
 import type { Comment } from 'src/inmemoryDB/types';
 import { InMemoSharedRepo } from 'src/inmemoryDB/shared.repository';
 import { PrismaService } from 'src/PrismaModule/prisma.service';
@@ -45,20 +48,16 @@ export class CommentService {
         : String(valB).localeCompare(String(valA));
     });
 
-    if (!getCommentByArticleDto.page && !getCommentByArticleDto.limit) {
-      return commentsForArticle;
-    }
-
     const page = getCommentByArticleDto.page ?? 1;
     const limit = getCommentByArticleDto.limit ?? 5;
 
     const offset = (page - 1) * limit;
     const data = commentsForArticle.slice(offset, offset + limit);
-    const total = data.length;
-    return { data: data, total: total, page: page, limit: limit };
+    const total = commentsForArticle.length;
+    return { data, total, page, limit };
   }
 
-  createComment(createCommentDto: createCommentDto) {
+  createComment(createCommentDto: CreateCommentDto) {
     const article = this.inMemoSharedRepo.findArticleById(
       createCommentDto.articleId,
     );
@@ -72,7 +71,6 @@ export class CommentService {
     createdComment.id = randomUUID();
     createdComment.content = createCommentDto.content;
     createdComment.articleId = createCommentDto.articleId;
-    createdComment.authorId = createCommentDto.authorId || null;
 
     createdComment.createdAt = currentTimestamp;
 
@@ -104,11 +102,6 @@ export class CommentPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllComments(dto: GetCommentsByArticleDto) {
-    let isPaginate = false;
-    if (dto.page || dto.limit) {
-      isPaginate = true;
-    }
-
     const {
       articleId,
       sortBy = 'createdAt',
@@ -117,22 +110,8 @@ export class CommentPrismaPsService {
       limit = 5,
     } = dto;
 
-    if (!isPaginate) {
-      const commentsByArticle = await this.prisma.comment.findMany({
-        where: { articleId },
-        orderBy: {
-          [sortBy]: order,
-        },
-        include: {
-          author: true,
-        },
-      });
-
-      return commentsByArticle;
-    }
-
-    const take = limit ? Number(limit) : undefined;
-    const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.comment.findMany({
@@ -154,12 +133,12 @@ export class CommentPrismaPsService {
     return {
       data,
       total,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
+      page: Number(page),
+      limit: take,
     };
   }
 
-  async createComment(dto: createCommentDto) {
+  async createComment(dto: CreateCommentDto, authorId: string) {
     const article = await this.prisma.article.findUnique({
       where: { id: dto.articleId },
     });
@@ -173,7 +152,7 @@ export class CommentPrismaPsService {
         id: randomUUID(),
         content: dto.content,
         articleId: dto.articleId,
-        authorId: dto.authorId ?? null,
+        authorId,
       },
     });
     return {

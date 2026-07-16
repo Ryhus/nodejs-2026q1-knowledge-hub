@@ -55,7 +55,8 @@ describe('Article (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body).toMatchObject({ page: 1, limit: 5 });
+      expect(response.body.data).toBeInstanceOf(Array);
     });
 
     it('should correctly get article by id', async () => {
@@ -126,10 +127,10 @@ describe('Article (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
 
-      const hasDraft = response.body.some((a) => a.id === draftId);
-      const hasPublished = response.body.some((a) => a.id === publishedId);
+      const hasDraft = response.body.data.some((a) => a.id === draftId);
+      const hasPublished = response.body.data.some((a) => a.id === publishedId);
 
       expect(hasDraft).toBe(true);
       expect(hasPublished).toBe(false);
@@ -173,10 +174,12 @@ describe('Article (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
 
-      const hasWithCat = response.body.some((a) => a.id === articleWithCatId);
-      const hasWithoutCat = response.body.some(
+      const hasWithCat = response.body.data.some(
+        (a) => a.id === articleWithCatId,
+      );
+      const hasWithoutCat = response.body.data.some(
         (a) => a.id === articleWithoutCatId,
       );
 
@@ -217,10 +220,12 @@ describe('Article (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
 
-      const hasTagged = response.body.some((a) => a.id === tagArticleId);
-      const hasUntagged = response.body.some((a) => a.id === noTagArticleId);
+      const hasTagged = response.body.data.some((a) => a.id === tagArticleId);
+      const hasUntagged = response.body.data.some(
+        (a) => a.id === noTagArticleId,
+      );
 
       expect(hasTagged).toBe(true);
       expect(hasUntagged).toBe(false);
@@ -481,7 +486,6 @@ describe('Article (e2e)', () => {
       const createCommentDto = {
         content: 'Test comment',
         articleId,
-        authorId: null,
       };
 
       const createCommentResponse = await unauthorizedRequest

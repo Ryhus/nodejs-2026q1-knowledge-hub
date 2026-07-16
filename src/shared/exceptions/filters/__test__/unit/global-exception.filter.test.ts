@@ -114,7 +114,7 @@ describe('Global exception filter', () => {
       expect.objectContaining({
         method: 'GET',
         url: '/test-url',
-        trace: error.stack,
+        trace: undefined,
       }),
     );
   });

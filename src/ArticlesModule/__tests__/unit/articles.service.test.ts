@@ -110,12 +110,13 @@ describe('ArticlesService', () => {
   });
 
   describe('getAllArticles', () => {
-    it('should return array without pagination', () => {
+    it('should return the default paginated result', () => {
       repoMock.findAll.mockReturnValue([{ createdAt: 2 }, { createdAt: 1 }]);
 
       const result = service.getAllArticles({});
 
-      expect(Array.isArray(result)).toBe(true);
+      expect(result).toMatchObject({ total: 2, page: 1, limit: 5 });
+      expect(result.data).toHaveLength(2);
     });
 
     it('should return paginated result', () => {
@@ -123,10 +124,8 @@ describe('ArticlesService', () => {
 
       const result = service.getAllArticles({ page: 1, limit: 2 });
 
-      if (!Array.isArray(result)) {
-        expect(result).toHaveProperty('data');
-        expect(result.data.length).toBe(2);
-      }
+      expect(result).toHaveProperty('data');
+      expect(result.data).toHaveLength(2);
     });
   });
 });
