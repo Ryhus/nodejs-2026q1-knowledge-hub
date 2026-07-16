@@ -195,14 +195,13 @@ describe('UserPrismaPsService (prisma)', () => {
       }
     });
 
-    it('should return users array without pagination', async () => {
-      prismaMock.user.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+    it('should return the default paginated result', async () => {
+      prismaMock.$transaction.mockResolvedValue([[{ id: 1 }, { id: 2 }], 2]);
 
       const result = await service.getAllUsers({});
 
-      if (Array.isArray(result)) {
-        expect(result.length).toBe(2);
-      }
+      expect(result).toMatchObject({ total: 2, page: 1, limit: 5 });
+      expect(result.data).toHaveLength(2);
     });
   });
 });

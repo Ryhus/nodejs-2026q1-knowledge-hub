@@ -37,12 +37,13 @@ describe('ArticlesPrismaPsService (Nest)', () => {
   });
 
   describe('getAllArticles', () => {
-    it('should return non-paginated result', async () => {
-      prismaMock.article.findMany.mockResolvedValue([{ id: 1 }]);
+    it('should return the default paginated result', async () => {
+      prismaMock.$transaction.mockResolvedValue([[{ id: 1 }], 1]);
 
       const result = await service.getAllArticles({});
 
-      expect(Array.isArray(result)).toBe(true);
+      expect(result).toMatchObject({ total: 1, page: 1, limit: 5 });
+      expect(result.data).toHaveLength(1);
     });
 
     it('should return paginated data', async () => {
@@ -50,10 +51,8 @@ describe('ArticlesPrismaPsService (Nest)', () => {
 
       const result = await service.getAllArticles({ page: 1 });
 
-      if (!Array.isArray(result)) {
-        expect(result.data.length).toBe(1);
-        expect(result.page).toBe(1);
-      }
+      expect(result.data).toHaveLength(1);
+      expect(result.page).toBe(1);
     });
   });
 

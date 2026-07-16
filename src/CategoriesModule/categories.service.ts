@@ -39,18 +39,14 @@ export class CategoriesService {
         : String(valB).localeCompare(String(valA));
     });
 
-    if (!getCategoriesQueryDto.page && !getCategoriesQueryDto.limit) {
-      return categories;
-    }
-
     const page = getCategoriesQueryDto.page ?? 1;
     const limit = getCategoriesQueryDto.limit ?? 5;
 
     const offset = (page - 1) * limit;
     const data = categories.slice(offset, offset + limit);
-    const total = data.length;
+    const total = categories.length;
 
-    return { data: data, total: total, page: page, limit: limit };
+    return { data, total, page, limit };
   }
 
   createCategory(createCategoryDto: CreateCategoryDto) {
@@ -102,25 +98,10 @@ export class CategoriesPrismaPsService {
   constructor(private prisma: PrismaService) {}
 
   async getAllCategories(query: GetCategoriesQueryDto) {
-    let isPaginate = false;
-    if (query.page || query.limit) {
-      isPaginate = true;
-    }
-
     const { sortBy = 'name', order = 'desc', page = 1, limit = 5 } = query;
 
-    if (!isPaginate) {
-      const categories = await this.prisma.category.findMany({
-        orderBy: {
-          [sortBy]: order,
-        },
-      });
-
-      return categories;
-    }
-
-    const take = limit ? Number(limit) : undefined;
-    const skip = page && limit ? (Number(page) - 1) * Number(limit) : undefined;
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
 
     const categories = await this.prisma.category.findMany({
       orderBy: {
@@ -135,8 +116,8 @@ export class CategoriesPrismaPsService {
     return {
       data: categories,
       total,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
+      page: Number(page),
+      limit: take,
     };
   }
 

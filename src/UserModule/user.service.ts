@@ -47,18 +47,14 @@ export class UserService {
         : String(valB).localeCompare(String(valA));
     });
 
-    if (!getUsersQueryDto.page && !getUsersQueryDto.limit) {
-      return users;
-    }
-
     const page = getUsersQueryDto.page ?? 1;
     const limit = getUsersQueryDto.limit ?? 5;
 
     const offset = (page - 1) * limit;
     const data = users.slice(offset, offset + limit);
-    const total = data.length;
+    const total = users.length;
 
-    return { data: data, total: total, page: page, limit: limit };
+    return { data, total, page, limit };
   }
 
   createUser(user: CreateUserDto) {
@@ -133,11 +129,6 @@ export class UserPrismaPsService {
   ) {}
 
   async getAllUsers(query: GetUsersQueryDto) {
-    let isPaginate = false;
-    if (query.page || query.limit) {
-      isPaginate = true;
-    }
-
     const { sortBy = 'createdAt', order = 'desc', page = 1, limit = 5 } = query;
 
     const selectedFields = {
@@ -147,14 +138,6 @@ export class UserPrismaPsService {
       createdAt: true,
       updatedAt: true,
     };
-
-    if (!isPaginate) {
-      const users = await this.prisma.user.findMany({
-        orderBy: { [sortBy]: order },
-        select: selectedFields,
-      });
-      return users;
-    }
 
     const skip = (page - 1) * limit;
 
