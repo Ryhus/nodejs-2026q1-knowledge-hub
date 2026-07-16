@@ -84,6 +84,13 @@ const prisma = new PrismaClient({
 });
 
 export async function runSeed() {
+  const existingUsers = await prisma.user.count();
+
+  if (existingUsers > 0) {
+    console.info('Database already contains users. Seed skipped.');
+    return;
+  }
+
   const password = await bcrypt.hash(ADMIN.password, 10);
 
   await prisma.user.upsert({
