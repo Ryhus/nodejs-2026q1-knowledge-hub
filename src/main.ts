@@ -25,7 +25,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')
     .setDescription(
-      'The Knowledge Hub allows users to create, edit, and organize articles by categories and tags',
+      'The Knowledge Hub allows users to create, edit, and organize articles by categories and tags and work with articles, using AI. The application supports transtaion, summarisation and anlylis of the articles. RAG retrieval supported',
     )
     .setVersion('1.0')
     .addBearerAuth(
