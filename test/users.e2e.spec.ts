@@ -7,9 +7,11 @@ import {
   removeTokenUser,
 } from './utils';
 import { usersRoutes, articlesRoutes, commentsRoutes } from './endpoints';
+import prisma from './lib/prisma';
+import { randomUUID as createUuid } from 'node:crypto';
 
 const createUserDto = {
-  login: 'TEST_LOGIN',
+  login: `TEST_LOGIN_${createUuid()}`,
   password: 'TEST_PASSWORD',
 };
 
@@ -46,7 +48,8 @@ describe('Users (e2e)', () => {
         .get(usersRoutes.getAll)
         .set(commonHeaders);
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body).toMatchObject({ page: 1, limit: 5 });
+      expect(response.body.data).toBeInstanceOf(Array);
     });
 
     it('should correctly get user by id', async () => {
@@ -304,20 +307,15 @@ describe('Users (e2e)', () => {
       const { id: articleId } = createArticleResponse.body;
       expect(createArticleResponse.status).toBe(StatusCodes.CREATED);
 
-      // Create comment by this user
-      const createCommentDto = {
-        content: 'Test comment',
-        articleId,
-        authorId: userId,
-      };
-
-      const createCommentResponse = await unauthorizedRequest
-        .post(commentsRoutes.create)
-        .set(commonHeaders)
-        .send(createCommentDto);
-
-      const { id: commentId } = createCommentResponse.body;
-      expect(createCommentResponse.status).toBe(StatusCodes.CREATED);
+      const createdComment = await prisma.comment.create({
+        data: {
+          id: createUuid(),
+          content: 'Test comment',
+          articleId,
+          authorId: userId,
+        },
+      });
+      const commentId = createdComment.id;
 
       // Delete user
       const deleteResponse = await unauthorizedRequest

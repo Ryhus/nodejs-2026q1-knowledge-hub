@@ -138,7 +138,7 @@ export class CommentPrismaPsService {
     };
   }
 
-  async createComment(dto: CreateCommentDto) {
+  async createComment(dto: CreateCommentDto, authorId: string) {
     const article = await this.prisma.article.findUnique({
       where: { id: dto.articleId },
     });
@@ -152,6 +152,7 @@ export class CommentPrismaPsService {
         id: randomUUID(),
         content: dto.content,
         articleId: dto.articleId,
+        authorId,
       },
     });
     return {

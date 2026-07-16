@@ -65,14 +65,14 @@ describe('Comments (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body).toMatchObject({ page: 1, limit: 5 });
+      expect(response.body.data).toBeInstanceOf(Array);
     });
 
     it('should correctly get comment by id', async () => {
       const createCommentDto = {
         content: 'Test comment for GET',
         articleId: testArticleId,
-        authorId: null,
       };
 
       const creationResponse = await unauthorizedRequest
@@ -138,7 +138,6 @@ describe('Comments (e2e)', () => {
         .send({
           content: 'Comment on first article',
           articleId: testArticleId,
-          authorId: null,
         });
 
       expect(comment1Response.status).toBe(StatusCodes.CREATED);
@@ -151,7 +150,6 @@ describe('Comments (e2e)', () => {
         .send({
           content: 'Comment on second article',
           articleId: anotherArticleId,
-          authorId: null,
         });
 
       expect(comment2Response.status).toBe(StatusCodes.CREATED);
@@ -163,18 +161,24 @@ describe('Comments (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
 
-      const hasComment1 = response.body.some((c) => c.id === comment1Id);
-      const hasComment2 = response.body.some((c) => c.id === comment2Id);
+      const hasComment1 = response.body.data.some((c) => c.id === comment1Id);
+      const hasComment2 = response.body.data.some((c) => c.id === comment2Id);
 
       expect(hasComment1).toBe(true);
       expect(hasComment2).toBe(false);
 
       // Cleanup
-      await unauthorizedRequest.delete(commentsRoutes.delete(comment1Id)).set(commonHeaders);
-      await unauthorizedRequest.delete(commentsRoutes.delete(comment2Id)).set(commonHeaders);
-      await unauthorizedRequest.delete(articlesRoutes.delete(anotherArticleId)).set(commonHeaders);
+      await unauthorizedRequest
+        .delete(commentsRoutes.delete(comment1Id))
+        .set(commonHeaders);
+      await unauthorizedRequest
+        .delete(commentsRoutes.delete(comment2Id))
+        .set(commonHeaders);
+      await unauthorizedRequest
+        .delete(articlesRoutes.delete(anotherArticleId))
+        .set(commonHeaders);
     });
   });
 
@@ -183,7 +187,6 @@ describe('Comments (e2e)', () => {
       const createCommentDto = {
         content: 'Test comment',
         articleId: testArticleId,
-        authorId: null,
       };
 
       const response = await unauthorizedRequest
@@ -193,11 +196,10 @@ describe('Comments (e2e)', () => {
 
       expect(response.status).toBe(StatusCodes.CREATED);
 
-      const { id, content, articleId, authorId, createdAt } = response.body;
+      const { id, content, articleId, createdAt } = response.body;
       expect(validate(id)).toBe(true);
       expect(content).toBe(createCommentDto.content);
       expect(articleId).toBe(createCommentDto.articleId);
-      expect(authorId).toBe(createCommentDto.authorId);
       expect(typeof createdAt).toBe('number');
 
       const cleanupResponse = await unauthorizedRequest
@@ -241,7 +243,6 @@ describe('Comments (e2e)', () => {
         .send({
           content: 'Test comment',
           articleId: randomUUID,
-          authorId: null,
         });
 
       expect(response.status).toBe(StatusCodes.UNPROCESSABLE_ENTITY);
@@ -254,7 +255,6 @@ describe('Comments (e2e)', () => {
         .send({
           content: 'Test comment',
           articleId: 'invalid-uuid',
-          authorId: null,
         });
 
       expect(response.status).toBe(StatusCodes.BAD_REQUEST);
@@ -266,7 +266,6 @@ describe('Comments (e2e)', () => {
       const createCommentDto = {
         content: 'Comment to delete',
         articleId: testArticleId,
-        authorId: null,
       };
 
       const response = await unauthorizedRequest

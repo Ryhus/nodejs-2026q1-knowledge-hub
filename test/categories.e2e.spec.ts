@@ -47,7 +47,8 @@ describe('Category (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body).toMatchObject({ page: 1, limit: 5 });
+      expect(response.body.data).toBeInstanceOf(Array);
     });
 
     it('should correctly get category by id', async () => {

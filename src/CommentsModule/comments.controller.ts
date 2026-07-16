@@ -81,8 +81,11 @@ export class CommentController {
   @ApiUnprocessableEntityResponse({
     description: 'Can not process requested entity',
   })
-  async create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentService.createComment(createCommentDto);
+  async create(
+    @Body() createCommentDto: CreateCommentDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.commentService.createComment(createCommentDto, user.userId);
   }
 
   @Roles(Role.admin, Role.viewer, Role.editor)

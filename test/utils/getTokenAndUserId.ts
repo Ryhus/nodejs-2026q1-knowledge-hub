@@ -1,8 +1,9 @@
 import { authRoutes } from '../endpoints';
 import promoteUserRole from './promoteUserRole';
+import { randomUUID } from 'node:crypto';
 
 const createUserDto = {
-  login: 'TEST_AUTH_LOGIN',
+  login: `TEST_AUTH_LOGIN_${randomUUID()}`,
   password: 'Tu6!@#%&',
 };
 

@@ -100,7 +100,6 @@ describe('RBAC - Comments (e2e)', () => {
         .send({
           content: 'Test comment',
           articleId: testArticleId,
-          authorId: viewerUserId,
         });
 
       expect(response.status).toBe(StatusCodes.FORBIDDEN);
@@ -137,7 +136,6 @@ describe('RBAC - Comments (e2e)', () => {
         .send({
           content: 'Editor comment',
           articleId: testArticleId,
-          authorId: editorUserId,
         });
 
       expect(response.status).toBe(StatusCodes.CREATED);
@@ -157,7 +155,6 @@ describe('RBAC - Comments (e2e)', () => {
         .send({
           content: 'Admin comment',
           articleId: testArticleId,
-          authorId: adminUserId,
         });
 
       expect(createResponse.status).toBe(StatusCodes.CREATED);
@@ -185,7 +182,6 @@ describe('RBAC - Comments (e2e)', () => {
         .send({
           content: 'Admin test comment',
           articleId: testArticleId,
-          authorId: adminUserId,
         });
 
       expect(createResponse.status).toBe(StatusCodes.CREATED);
